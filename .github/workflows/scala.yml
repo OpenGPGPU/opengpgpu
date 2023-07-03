@@ -27,4 +27,6 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
     - name: Run tests
-      run: make test
+      run: 
+        curl -L https://github.com/com-lihaoyi/mill/releases/download/0.11.1/0.11.1-6-ccbad3 > mill && chmod +x mill && export PATH=`pwd`:${PATH}
+        make test
