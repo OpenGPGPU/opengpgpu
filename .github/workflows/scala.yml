@@ -28,7 +28,7 @@ jobs:
         distribution: 'temurin'
     - name: Download mill
       run: 
-        curl -L https://github.com/com-lihaoyi/mill/releases/download/0.11.1/0.11.1-6-ccbad3 > mill && chmod +x mill && export PATH=`pwd`:${PATH}
+        curl -L https://github.com/com-lihaoyi/mill/releases/download/0.11.1/0.11.1 > mill && chmod +x mill
     - name: Run tests
       run:
-        make test
+        export PATH=`pwd`:${PATH} && make test
