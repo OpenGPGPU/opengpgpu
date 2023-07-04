@@ -3,4 +3,7 @@ toy_alu:
 test:
 	mill -i opengpgpu.test
 
+alu:
+	mill -i opengpgpu.runMain  opengpgpu.pipeline.ALURTL
+
 .phony: test
