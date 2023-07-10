@@ -15,7 +15,8 @@ import chisel3.util._
 
 object parameters{
     def xLen = 32 // data length 32-bit
-
+    def SOFT_THREAD = 32
+    def HARD_THREAD = 32
     var NUMBER_CU = 4
     var NUMBER_RES_TABLE = 2
     var NUMBER_VGPR_SLOTS = 4096

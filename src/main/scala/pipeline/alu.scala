@@ -30,80 +30,38 @@ import chisel3.util._
 RV32I except:
 ecall/ebreak
 */
-object ALUOps {
-  val SZ_ALU_FUNC = 5
-  def FN_X = BitPat("b?????")
-  def FN_ADD = 0.U(5.W)
-  def FN_SL = 1.U(5.W)
-  def FN_SEQ = 2.U(5.W)
-  def FN_SNE = 3.U(5.W)
-  def FN_XOR = 4.U(5.W)
-  def FN_SR = 5.U(5.W)
-  def FN_OR = 6.U(5.W)
-  def FN_AND = 7.U(5.W)
-  def FN_SUB = 10.U(5.W)
-  def FN_SRA = 11.U(5.W)
-  def FN_SLT = 12.U(5.W)
-  def FN_SGE = 13.U(5.W)
-  def FN_SLTU = 14.U(5.W)
-  def FN_SGEU = 15.U(5.W)
-  def FN_MAX=16.U(5.W)
-  def FN_MIN=17.U(5.W)
-  def FN_MAXU=18.U(5.W)
-  def FN_MINU=19.U(5.W)
-  def FN_A1ZERO = 8.U(5.W)
-  def FN_MUL = 20.U(5.W)
-  def FN_MULH = 21.U(5.W)
-  def FN_MULHU = 22.U(5.W)
-  def FN_MULHSU = 23.U(5.W)
-  def FN_MACC = 24.U(5.W)
-  def FN_NMSAC = 25.U(5.W)
-  def FN_MADD = 26.U(5.W)
-  def FN_NMSUB = 27.U(5.W)
-
-  def isSub(cmd: UInt) = (cmd >= FN_SUB) & (cmd <= FN_SGEU)
-  def isCmp(cmd: UInt) = (cmd >= FN_SLT) & (cmd <= FN_SGEU)
-  def cmpUnsigned(cmd: UInt) = cmd(1)
-  def cmpInverted(cmd: UInt) = cmd(0)
-  def cmpEq(cmd: UInt) = !cmd(3)
-  def isMIN(cmd:UInt)=(cmd(4,2)===("b100").U)
-  def isMUL(cmd:UInt)=(cmd(4,2)===("b101").U)
-  def isMAC(cmd:UInt)=(cmd(4,2)===("b110").U)
-}
-
-import ALUOps._
 import opengpgpu.config.parameters._
+import opengpgpu.pipeline.ALUOps._
 class ScalarALU() extends Module{
   val io = IO(new Bundle() {
     val func        = Input(UInt(5.W))
-    val in2         = Input(UInt(xLen.W))
-    val in1         = Input(UInt(xLen.W))
-    val in3         = Input(UInt(xLen.W))
+    val op1         = Input(UInt(xLen.W))
+    val op2         = Input(UInt(xLen.W))
     val out         = Output(UInt(xLen.W))
     val cmp_out     = Output(Bool())
   })
 
   //ADD, SUB
-  val in2_inv = Mux(isSub(io.func), ~io.in2, io.in2)
-  val adder_out = io.in1 + in2_inv + isSub(io.func).asUInt
+  val op2_inv = Mux(isSub(io.func), ~io.op2, io.op2)
+  val adder_out = io.op1 + op2_inv + isSub(io.func).asUInt
 
   //SLT, SLTU
-  val in1_xor_in2 = io.in1 ^ in2_inv
-  val slt = Mux(io.in1(xLen-1) === io.in2(xLen-1), adder_out(xLen-1),
-                Mux(cmpUnsigned(io.func), io.in2(xLen-1), io.in1(xLen-1)))
-  io.cmp_out := cmpInverted(io.func) ^ Mux(cmpEq(io.func), in1_xor_in2 === 0.U(xLen.W), slt)
+  val op1_xor_op2 = io.op1 ^ op2_inv
+  val slt = Mux(io.op1(xLen-1) === io.op2(xLen-1), adder_out(xLen-1),
+                Mux(cmpUnsigned(io.func), io.op2(xLen-1), io.op1(xLen-1)))
+  io.cmp_out := cmpInverted(io.func) ^ Mux(cmpEq(io.func), op1_xor_op2 === 0.U(xLen.W), slt)
 
   //SLL, SRL, SRA
-  val (shamt, shin_r) = (io.in2(4,0), io.in1)
+  val (shamt, shin_r) = (io.op2(4,0), io.op1)
   // 64 bits
   // val (shamt, shin_r) =
-  //   if (xLen == 32) (io.in2(4,0), io.in1)
+  //   if (xLen == 32) (io.op2(4,0), io.op1)
   //   else {
   //     require(xLen == 64)
-  //     val shin_hi_32 = Fill(32, aluFn.isSub(io.fn) && io.in1(31))
-  //     val shin_hi = Mux(io.dw === DW_64, io.in1(63,32), shin_hi_32)
-  //     val shamt = Cat(io.in2(5) & (io.dw === DW_64), io.in2(4,0))
-  //     (shamt, Cat(shin_hi, io.in1(31,0)))
+  //     val shin_hi_32 = Fill(32, aluFn.isSub(io.fn) && io.op1(31))
+  //     val shin_hi = Mux(io.dw === DW_64, io.op1(63,32), shin_hi_32)
+  //     val shamt = Cat(io.op2(5) & (io.dw === DW_64), io.op2(4,0))
+  //     (shamt, Cat(shin_hi, io.op1(31,0)))
   //   }
   val shin = Mux(io.func === FN_SR || io.func === FN_SRA, shin_r, Reverse(shin_r))
   val shout_r = (Cat(isSub(io.func)&shin(xLen-1), shin).asSInt >> shamt)(xLen-1, 0)
@@ -112,25 +70,25 @@ class ScalarALU() extends Module{
     Mux(io.func === FN_SL,                       shout_l, 0.U(xLen.W))
 
   //AND, OR, XOR
-  val logic = Mux(io.func === FN_XOR, io.in1 ^ io.in2,
-    Mux(io.func === FN_OR, io.in1 | io.in2,
-      Mux(io.func === FN_AND, io.in1 & io.in2, 0.U(xLen.W))))
+  val logic = Mux(io.func === FN_XOR, io.op1 ^ io.op2,
+    Mux(io.func === FN_OR, io.op1 | io.op2,
+      Mux(io.func === FN_AND, io.op1 & io.op2, 0.U(xLen.W))))
 
   val shift_logic_cmp = (isCmp(io.func)&&slt) | logic | shout
   val out = Mux(io.func === FN_ADD || io.func === FN_SUB, adder_out, shift_logic_cmp)
 
   //MIN, MAX
-  val minu=Mux(io.in1>io.in2,io.in2,io.in1)
-  val maxu=Mux(io.in1>io.in2,io.in1,io.in2)
-  val in1s=io.in1.asSInt()
-  val in2s=io.in2.asSInt()
-  val mins=Mux(in1s>in2s,in2s,in1s).asUInt
-  val maxs=Mux(in1s>in2s,in1s,in2s).asUInt
+  val minu=Mux(io.op1>io.op2,io.op2,io.op1)
+  val maxu=Mux(io.op1>io.op2,io.op1,io.op2)
+  val op1s=io.op1.asSInt()
+  val op2s=io.op2.asSInt()
+  val mins=Mux(op1s>op2s,op2s,op1s).asUInt
+  val maxs=Mux(op1s>op2s,op1s,op2s).asUInt
   val minmaxout = Mux(io.func===FN_MIN,mins,
                   Mux(io.func===FN_MAX,maxs,
                   Mux(io.func===FN_MINU,minu,maxu) ) )
 
-  io.out := Mux(io.func===FN_A1ZERO,io.in2,
+  io.out := Mux(io.func===FN_A1ZERO,io.op2,
             Mux(isMIN(io.func),minmaxout, out))
 }
 
@@ -138,4 +96,3 @@ class ScalarALU() extends Module{
 object ALURTL extends App {
   emitVerilog (new ScalarALU(), Array("--target-dir", "generated"))
 }
-
