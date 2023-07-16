@@ -6,4 +6,7 @@ test:
 alu:
 	mill -i opengpgpu.runMain  opengpgpu.pipeline.ALURTL
 
+valu_fir:
+	mill -i opengpgpu.runMain opengpgpu.pipeline.VectorALUFIR
+
 .phony: test

@@ -60,6 +60,11 @@ object VectorALURTL extends App {
   emitVerilog (new VectorALU(), Array("--target-dir", "generated"))
 }
 
+
+object VectorALUFIR extends App {
+  ChiselStage.emitFirrtl(new VectorALU())
+}
+
 // object VectorALUGraph extends App {
 //   (new ChiselStage).emitGraphML(new VectorALU() , Array("--target-dir", "graphs"))
 // }
