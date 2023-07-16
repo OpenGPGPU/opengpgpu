@@ -27,10 +27,6 @@ class CrossbarSpec extends FlatSpec with ChiselScalatestTester with Matchers {
       // 执行一步时钟
       c.clock.step(1)
 
-      for (i <- 0 until 4) {
-        c.io.in(i).valid.poke(false.B)
-        c.io.in(i).bits.poke(i.U)
-      }
 
       // 检查输出
       c.io.out(0).valid.expect(true.B)
@@ -44,6 +40,11 @@ class CrossbarSpec extends FlatSpec with ChiselScalatestTester with Matchers {
 
       // 执行一步时钟
       c.clock.step(1)
+
+      for (i <- 0 until 4) {
+        c.io.in(i).valid.poke(false.B)
+        c.io.in(i).bits.poke(i.U)
+      }
 
       c.io.out(0).valid.expect(false.B)
     }
