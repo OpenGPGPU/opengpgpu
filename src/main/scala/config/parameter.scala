@@ -1,13 +1,24 @@
 /*
- * Copyright (c) 2021-2022 International Innovation Center of Tsinghua University, Shanghai
- * Ventus is licensed under Mulan PSL v2.
- * You can use this software according to the terms and conditions of the Mulan PSL v2.
- * You may obtain a copy of Mulan PSL v2 at:
- *          http://license.coscl.org.cn/MulanPSL2
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
- * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
- * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
- * See the Mulan PSL v2 for more details. */
+ * Copyright (c) 2023 OpenGPGPU
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 package opengpgpu.config
 
@@ -15,10 +26,13 @@ import chisel3.util._
 
 object parameters{
     def xLen = 32 // data length 32-bit
-    def SOFT_THREAD = 32
-    def HARD_THREAD = 32
+    def NUMBER_THREAD = 32
     var NUMBER_CU = 4
+    var NUMBER_WARP = 8
     var NUMBER_RES_TABLE = 2
+    var ADDR_WIDTH = 32
+    var NUMBER_IREG = 32
+    var REG_ID_WIDTH = log2Ceil(NUMBER_IREG)
     var NUMBER_VGPR_SLOTS = 4096
     var NUMBER_SGPR_SLOTS = 4096
     var NUMBER_LDS_SLOTS = 4096
@@ -46,4 +60,3 @@ object parameters{
     var NUM_SCHEDULER_WIDTH = Math.max(log2Ceil(NUM_SCHEDULER), 1)
 }
 
-object parameter

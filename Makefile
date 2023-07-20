@@ -1,12 +1,16 @@
-toy_alu:
+init:
+	git submodule update --init --recursive
+
+toy_alu: init
 	mill -i opengpgpu.runMain  opengpgpu.alu.ALURTL
-test:
+
+test: init
 	mill -i opengpgpu.test
 
-alu:
+alu: init
 	mill -i opengpgpu.runMain  opengpgpu.pipeline.ALURTL
 
-valu_fir:
+valu_fir: init
 	mill -i opengpgpu.runMain opengpgpu.pipeline.VectorALUFIR
 
 .phony: test

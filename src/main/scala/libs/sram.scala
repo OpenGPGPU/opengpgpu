@@ -37,7 +37,7 @@ class ReadWriteSmem(width: Int = xLen, depth: Int = 1024, addrWidth: Int = 10) e
   io.dataOut := mem.read(io.addr, io.enable)
 }
 
-class MaskedReadWriteSmem(width: Int = xLen, depth: Int = 1024, addrWidth: Int = 10, vecLen: Int = SOFT_THREAD) extends Module {
+class MaskedReadWriteSmem(width: Int = xLen, depth: Int = 1024, addrWidth: Int = 10, vecLen: Int = NUMBER_THREAD) extends Module {
   val io = IO(new Bundle {
     val enable = Input(Bool())
     val write = Input(Bool())

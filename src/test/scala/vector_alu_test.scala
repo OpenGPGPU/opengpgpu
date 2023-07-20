@@ -2,11 +2,13 @@ import chisel3._
 import chisel3.util._
 import chiseltest._
 import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
 
 import opengpgpu.pipeline._
 import opengpgpu.config.parameters._
 
-class VectorALUTest extends FlatSpec with ChiselScalatestTester {
+
+class VectorALUTest extends AnyFlatSpec with ChiselScalatestTester {
   behavior of "VectorALU"
 
   it should "perform ALU operations correctly" in {

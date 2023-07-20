@@ -1,10 +1,11 @@
 import chisel3._
 import chiseltest._
 import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
 
 import opengpgpu.libs._
 
-class CrossbarSpec extends FlatSpec with ChiselScalatestTester with Matchers {
+class CrossbarSpec extends AnyFlatSpec with ChiselScalatestTester {
   behavior of "Crossbar"
   
   it should "route data based on sel signals" in {

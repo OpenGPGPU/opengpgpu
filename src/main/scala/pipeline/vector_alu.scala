@@ -23,23 +23,24 @@
 package opengpgpu.pipeline
 
 import chisel3._
+import circt.stage.ChiselStage
 import chisel3.util._
-import chisel3.stage.ChiselStage
+// import chisel3.stage.ChiselStage
 import opengpgpu.config.parameters._
 
-class VectorALU(hardThread: Int = HARD_THREAD) extends Module {
+class VectorALU(numThread: Int = NUMBER_THREAD) extends Module {
   val io = IO(new Bundle {
-    val in = Flipped(DecoupledIO(new VectorExeData(hardThread)))
-    val out = DecoupledIO(new VectorData(hardThread))
-    val thread_mask_out = DecoupledIO(new ThreadMask(hardThread))
+    val in = Flipped(DecoupledIO(new VectorExeData(numThread)))
+    val out = DecoupledIO(new VectorData(numThread))
+    val thread_mask_out = DecoupledIO(new ThreadMask(numThread))
   })
 
-  val alu=VecInit(Seq.fill(hardThread)((Module(new ScalarALU())).io))
+  val alu=VecInit(Seq.fill(numThread)((Module(new ScalarALU())).io))
 
-  val result = Module(new Queue(new VectorData(hardThread), 1, pipe = true))
-  val result2simt = Module(new Queue(new ThreadMask(hardThread), 1, pipe = true))
+  val result = Module(new Queue(new VectorData(numThread), 1, pipe = true))
+  val result2simt = Module(new Queue(new ThreadMask(numThread), 1, pipe = true))
 
-  for (x <- 0 until hardThread) {
+  for (x <- 0 until numThread) {
     alu(x).op1 := io.in.bits.op1(x)
     alu(x).op2 := io.in.bits.op2(x)
     alu(x).func := io.in.bits.func
@@ -62,7 +63,8 @@ object VectorALURTL extends App {
 
 
 object VectorALUFIR extends App {
-  ChiselStage.emitFirrtl(new VectorALU())
+  // ChiselStage.emitFirrtl(new VectorALU())
+  ChiselStage.emitCHIRRTL(new VectorALU())
 }
 
 // object VectorALUGraph extends App {
