@@ -30,4 +30,3 @@ with Diagram("pipeline architecture", show=True):
     ex_mem = ElasticacheForMemcached("External mem")
     ex_mem >> inst_fetch
     lsu << Edge() >> ex_mem
-    # write_back >> regs

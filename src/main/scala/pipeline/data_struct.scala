@@ -68,18 +68,30 @@ object ALUOps {
   def isMAC(cmd:UInt)=(cmd(4,2)===("b110").U)
 }
 
-class VectorExeData(num_thread: Int = SOFT_THREAD) extends Bundle {
+class VectorExeData(num_thread: Int = NUMBER_THREAD) extends Bundle {
   val op1 = Vec(num_thread, UInt(xLen.W))
   val op2 = Vec(num_thread, UInt(xLen.W))
   val func = UInt(ALUOps.SZ_ALU_FUNC.W)
   val mask = Vec(num_thread, Bool())
 }
 
-class VectorData(num_thread: Int = SOFT_THREAD) extends Bundle {
+class LSUData(num_thread: Int = NUMBER_THREAD) extends Bundle {
+  val addr = Vec(num_thread, UInt(ADDR_WIDTH.W))
+  val data = Vec(num_thread, UInt(xLen.W))
+  val mask = Vec(num_thread, Bool())
+  val func = UInt(ALUOps.SZ_ALU_FUNC.W)
+  val wid = UInt(log2Ceil(NUMBER_WARP).W)
+  val pc = UInt(ADDR_WIDTH.W)
+  val fence = Bool()
+  val offsset = UInt(xLen.W)
+  val rd = UInt(REG_ID_WIDTH.W)
+}
+
+class VectorData(num_thread: Int = NUMBER_THREAD) extends Bundle {
   val data = Vec(num_thread, UInt(xLen.W))
   val mask = Vec(num_thread, Bool())
 }
 
-class ThreadMask(num_thread: Int = SOFT_THREAD) extends Bundle {
+class ThreadMask(num_thread: Int = NUMBER_THREAD) extends Bundle {
   val mask = Vec(num_thread, Bool())
 }

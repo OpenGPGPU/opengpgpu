@@ -1,11 +1,12 @@
 import chisel3._
-import chisel3.util._
 import chiseltest._
 import org.scalatest._
 
 import opengpgpu.pipeline._
+import org.scalatest.flatspec.AnyFlatSpec
+import chisel3.util._
 
-class ScalarALUTest extends FlatSpec with ChiselScalatestTester with Matchers {
+class ScalarALUTest extends AnyFlatSpec with ChiselScalatestTester {
   behavior of "ScalarALU"
 
   it should "perform ADD operation correctly" in {
