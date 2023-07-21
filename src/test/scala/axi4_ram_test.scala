@@ -44,7 +44,8 @@ class AXI4RAMTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.w.bits.data.poke(0xABCD.U)
       dut.io.w.bits.strb.poke("b1111".U)
       dut.clock.step()
-
+      println(dut.io.aw.bits.id.getClass) // .getSimpleName)
+      println(dut.io.aw.bits.id.getWidth)
       // Wait for write transaction to finish
       while(dut.io.b.valid.peek().litToBoolean == false) {
         dut.clock.step()
