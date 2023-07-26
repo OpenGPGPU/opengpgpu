@@ -1,16 +1,16 @@
 /*
  * Copyright (c) 2023 OpenGPGPU
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,27 +30,27 @@ import opengpgpu.config.parameters._
 
 class VectorALU(numThread: Int = NUMBER_THREAD) extends Module {
   val io = IO(new Bundle {
-    val in = Flipped(DecoupledIO(new VectorExeData(numThread)))
-    val out = DecoupledIO(new VectorData(numThread))
+    val in              = Flipped(DecoupledIO(new VectorExeData(numThread)))
+    val out             = DecoupledIO(new VectorData(numThread))
     val thread_mask_out = DecoupledIO(new ThreadMask(numThread))
   })
 
-  val alu=VecInit(Seq.fill(numThread)((Module(new ScalarALU())).io))
+  val alu = VecInit(Seq.fill(numThread)((Module(new ScalarALU())).io))
 
-  val result = Module(new Queue(new VectorData(numThread), 1, pipe = true))
+  val result      = Module(new Queue(new VectorData(numThread), 1, pipe = true))
   val result2simt = Module(new Queue(new ThreadMask(numThread), 1, pipe = true))
 
   for (x <- 0 until numThread) {
-    alu(x).op1 := io.in.bits.op1(x)
-    alu(x).op2 := io.in.bits.op2(x)
-    alu(x).func := io.in.bits.func
-    result.io.enq.bits.data(x) := alu(x).out
-    result.io.enq.bits.mask(x) := io.in.bits.mask(x)
+    alu(x).op1                      := io.in.bits.op1(x)
+    alu(x).op2                      := io.in.bits.op2(x)
+    alu(x).func                     := io.in.bits.func
+    result.io.enq.bits.data(x)      := alu(x).out
+    result.io.enq.bits.mask(x)      := io.in.bits.mask(x)
     result2simt.io.enq.bits.mask(x) := io.in.bits.mask(x) && alu(x).cmp_out
   }
 
-  io.in.ready := result.io.enq.ready && result2simt.io.enq.ready
-  result.io.enq.valid := io.in.valid
+  io.in.ready              := result.io.enq.ready && result2simt.io.enq.ready
+  result.io.enq.valid      := io.in.valid
   result2simt.io.enq.valid := io.in.valid
 
   io.out <> result.io.deq
@@ -58,9 +58,8 @@ class VectorALU(numThread: Int = NUMBER_THREAD) extends Module {
 }
 
 object VectorALURTL extends App {
-  emitVerilog (new VectorALU(), Array("--target-dir", "generated"))
+  emitVerilog(new VectorALU(), Array("--target-dir", "generated"))
 }
-
 
 object VectorALUFIR extends App {
   // ChiselStage.emitFirrtl(new VectorALU())
