@@ -25,10 +25,10 @@ import opengpgpu.config.parameters._
 
 class ReadWriteSmem(width: Int = xLen, depth: Int = 1024, addrWidth: Int = 10) extends Module {
   val io = IO(new Bundle {
-    val enable  = Input(Bool())
-    val write   = Input(Bool())
-    val addr    = Input(UInt(addrWidth.W))
-    val dataIn  = Input(UInt(width.W))
+    val enable = Input(Bool())
+    val write = Input(Bool())
+    val addr = Input(UInt(addrWidth.W))
+    val dataIn = Input(UInt(width.W))
     val dataOut = Output(UInt(width.W))
   })
 
@@ -40,11 +40,11 @@ class ReadWriteSmem(width: Int = xLen, depth: Int = 1024, addrWidth: Int = 10) e
 class MaskedReadWriteSmem(width: Int = xLen, depth: Int = 1024, addrWidth: Int = 10, vecLen: Int = NUMBER_THREAD)
     extends Module {
   val io = IO(new Bundle {
-    val enable  = Input(Bool())
-    val write   = Input(Bool())
-    val addr    = Input(UInt(addrWidth.W))
-    val mask    = Input(Vec(vecLen, Bool()))
-    val dataIn  = Input(Vec(vecLen, UInt(width.W)))
+    val enable = Input(Bool())
+    val write = Input(Bool())
+    val addr = Input(UInt(addrWidth.W))
+    val mask = Input(Vec(vecLen, Bool()))
+    val dataIn = Input(Vec(vecLen, UInt(width.W)))
     val dataOut = Output(Vec(vecLen, UInt(width.W)))
   })
 

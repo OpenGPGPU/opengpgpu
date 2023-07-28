@@ -34,15 +34,15 @@ import opengpgpu.config.parameters._
 import opengpgpu.pipeline.ALUOps._
 class ScalarALU() extends Module {
   val io = IO(new Bundle() {
-    val func    = Input(UInt(5.W))
-    val op1     = Input(UInt(xLen.W))
-    val op2     = Input(UInt(xLen.W))
-    val out     = Output(UInt(xLen.W))
+    val func = Input(UInt(5.W))
+    val op1 = Input(UInt(xLen.W))
+    val op2 = Input(UInt(xLen.W))
+    val out = Output(UInt(xLen.W))
     val cmp_out = Output(Bool())
   })
 
   // ADD, SUB
-  val op2_inv   = Mux(isSub(io.func), ~io.op2, io.op2)
+  val op2_inv = Mux(isSub(io.func), ~io.op2, io.op2)
   val adder_out = io.op1 + op2_inv + isSub(io.func).asUInt
 
   // SLT, SLTU
@@ -66,7 +66,7 @@ class ScalarALU() extends Module {
   //     val shamt = Cat(io.op2(5) & (io.dw === DW_64), io.op2(4,0))
   //     (shamt, Cat(shin_hi, io.op1(31,0)))
   //   }
-  val shin    = Mux(io.func === FN_SR || io.func === FN_SRA, shin_r, Reverse(shin_r))
+  val shin = Mux(io.func === FN_SR || io.func === FN_SRA, shin_r, Reverse(shin_r))
   val shout_r = (Cat(isSub(io.func) & shin(xLen - 1), shin).asSInt >> shamt)(xLen - 1, 0)
   val shout_l = Reverse(shout_r)
   val shout = Mux(io.func === FN_SR || io.func === FN_SRA, shout_r, 0.U(xLen.W)) |
@@ -80,15 +80,15 @@ class ScalarALU() extends Module {
   )
 
   val shift_logic_cmp = (isCmp(io.func) && slt) | logic | shout
-  val out             = Mux(io.func === FN_ADD || io.func === FN_SUB, adder_out, shift_logic_cmp)
+  val out = Mux(io.func === FN_ADD || io.func === FN_SUB, adder_out, shift_logic_cmp)
 
   // MIN, MAX
-  val minu      = Mux(io.op1 > io.op2, io.op2, io.op1)
-  val maxu      = Mux(io.op1 > io.op2, io.op1, io.op2)
-  val op1s      = io.op1.asSInt
-  val op2s      = io.op2.asSInt
-  val mins      = Mux(op1s > op2s, op2s, op1s).asUInt
-  val maxs      = Mux(op1s > op2s, op1s, op2s).asUInt
+  val minu = Mux(io.op1 > io.op2, io.op2, io.op1)
+  val maxu = Mux(io.op1 > io.op2, io.op1, io.op2)
+  val op1s = io.op1.asSInt
+  val op2s = io.op2.asSInt
+  val mins = Mux(op1s > op2s, op2s, op1s).asUInt
+  val maxs = Mux(op1s > op2s, op1s, op2s).asUInt
   val minmaxout = Mux(io.func === FN_MIN, mins, Mux(io.func === FN_MAX, maxs, Mux(io.func === FN_MINU, minu, maxu)))
 
   io.out := Mux(io.func === FN_A1ZERO, io.op2, Mux(isMIN(io.func), minmaxout, out))
