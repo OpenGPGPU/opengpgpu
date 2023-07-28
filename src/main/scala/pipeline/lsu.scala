@@ -31,17 +31,17 @@ import opengpgpu.config._
 
 class LSU(implicit p: Parameters) extends LazyModule {
   val numThread   = p(ThreadNum)
-  val axi_m_param = AXI4MasterParameters("myaximaster")
-  val axi_m_port  = AXI4MasterPortParameters(Seq(axi_m_param))
-  val axi_master  = AXI4MasterNode(Seq(axi_m_port))
-  val ios         = InModuleBody(axi_master.makeIOs())
+  val axi_m_param = AXI4MasterParameters("myaximaster",
+                                         IdRange(0, numThread))
+  val axi_m_port = AXI4MasterPortParameters(Seq(axi_m_param))
+  val axi_master = AXI4MasterNode(Seq(axi_m_port))
 
-  lazy val module = new LazyModuleImp(this) {
+  lazy val module = new Impl
+  class Impl extends LazyModuleImp(this) {
     val io = IO(new Bundle {
       val in     = Flipped(DecoupledIO(new LSUData(numThread)))
       val out_WB = DecoupledIO(new LSUData(numThread))
     })
-    val axi_io = ios.head
 
     object State extends ChiselEnum {
       val IDLE, LOAD, STORE = Value
@@ -51,39 +51,29 @@ class LSU(implicit p: Parameters) extends LazyModule {
     val in_que = Module(new Queue(new LSUData(numThread), 1, pipe = true))
     io.in <> in_que.io.enq
 
-    val deq_ready = RegInit(0.B)
+    val deq_ready = Wire(Bool())
     val deq_data  = RegInit(0.U.asTypeOf(new LSUData(numThread)))
     val deq_valid = in_que.io.deq.valid
     in_que.io.deq.ready := deq_ready
 
     val state          = RegInit(State.IDLE)
-    val mem_counter    = RegInit(0.U(log2Ceil(numThread).W))
-    val req_counter    = RegInit(0.U(log2Ceil(numThread).W))
-    val aw_req_counter = RegInit(0.U(log2Ceil(numThread).W))
-    val rsp_counter    = RegInit(0.U(log2Ceil(numThread).W))
+    val mem_counter    = RegInit(0.U((log2Ceil(numThread)+1).W))
+    val req_counter    = RegInit(0.U((log2Ceil(numThread)+1).W))
+    val aw_req_counter = RegInit(0.U((log2Ceil(numThread)+1).W))
+    val rsp_counter    = RegInit(0.U((log2Ceil(numThread)+1).W))
 
-    val same_addr = Wire(Vec(numThread - 1, Bool()))
-    (0 until numThread - 1).foreach(i => {
-      same_addr(i) := deq_data.addr(i) === deq_data.addr(i + 1)
-    })
-    val same_addr_b = same_addr.asUInt.andR
+    val (out, _) = axi_master.out(0)
 
-    val (out, edgeOut) = axi_master.out(0)
-    out.r.ready := 1.B
-    out.b.ready := 1.B
-
-    deq_ready := (io.out_WB.ready && rsp_counter === mem_counter) ||
-      rsp_counter === mem_counter
-
-    when(deq_valid) {
-      mem_counter := Mux(same_addr_b, 1.U, PopCount(in_que.io.deq.bits.mask))
+    deq_ready := state === IDLE
+    when (in_que.io.deq.fire) {
+      mem_counter := PopCount(in_que.io.deq.bits.mask)
     }
     // state fsm
     switch(state) {
       is(State.IDLE) {
-        when(deq_valid && deq_data.func(0) === 0.U) {
+        when(deq_valid && in_que.io.deq.bits.func(0) === 0.U) {
           state := LOAD
-        }.elsewhen(deq_valid && deq_data.func(0) === 1.U) {
+        }.elsewhen(deq_valid && in_que.io.deq.bits.func(0) === 1.U) {
           state := STORE
         }
       }
@@ -91,7 +81,7 @@ class LSU(implicit p: Parameters) extends LazyModule {
         when(io.out_WB.ready && rsp_counter === mem_counter) {
           when(!deq_valid) {
             state := IDLE
-          }.elsewhen(deq_valid && deq_data.func(0) === 1.U) {
+          }.elsewhen(deq_valid && in_que.io.deq.bits.func(0) === 1.U) {
             state := STORE
           }
         }
@@ -100,7 +90,7 @@ class LSU(implicit p: Parameters) extends LazyModule {
         when(rsp_counter === mem_counter) {
           when(!deq_valid) {
             state := IDLE
-          }.elsewhen(deq_valid && deq_data.func(0) === 0.U) {
+          }.elsewhen(deq_valid && in_que.io.deq.bits.func(0) === 0.U) {
             state := LOAD
           }
         }
@@ -194,20 +184,24 @@ class LSU(implicit p: Parameters) extends LazyModule {
     }
 
     // axi req
+    out.r.ready := 1.B
+    out.b.ready := 1.B
     out.ar.valid      := state === LOAD
     out.ar.bits.id    := bit_loc
-    out.ar.bits.addr  := 0.U
-    out.ar.bits.len   := 1.U
+    out.ar.bits.addr  := deq_data.addr(bit_loc)
+    out.ar.bits.len   := 0.U
+    out.ar.bits.size   := 4.U
     out.ar.bits.burst := 0.U
     out.ar.bits.lock  := 0.U
     out.ar.bits.cache := 0.U
     out.ar.bits.prot  := 0.U
     out.ar.bits.qos   := 0.U
 
-    out.aw.valid      := state === STORE && aw_req_counter === req_counter
+    out.aw.valid      := state === STORE && aw_req_counter === req_counter && aw_req_counter < mem_counter
     out.aw.bits.id    := bit_loc
     out.aw.bits.addr  := deq_data.addr(bit_loc)
-    out.aw.bits.len   := 1.U
+    out.aw.bits.len   := 0.U
+    out.aw.bits.size   := 4.U
     out.aw.bits.burst := 0.U
     out.aw.bits.lock  := 0.U
     out.aw.bits.cache := 0.U
