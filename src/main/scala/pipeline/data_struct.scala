@@ -1,16 +1,16 @@
 /*
  * Copyright (c) 2023 OpenGPGPU
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,7 +25,6 @@ package opengpgpu.pipeline
 import chisel3._
 import chisel3.util._
 import opengpgpu.config.parameters._
-
 
 object ALUOps {
   val SZ_ALU_FUNC = 5
@@ -44,10 +43,10 @@ object ALUOps {
   def FN_SGE = 13.U(ALUOps.SZ_ALU_FUNC.W)
   def FN_SLTU = 14.U(ALUOps.SZ_ALU_FUNC.W)
   def FN_SGEU = 15.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_MAX=16.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_MIN=17.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_MAXU=18.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_MINU=19.U(ALUOps.SZ_ALU_FUNC.W)
+  def FN_MAX = 16.U(ALUOps.SZ_ALU_FUNC.W)
+  def FN_MIN = 17.U(ALUOps.SZ_ALU_FUNC.W)
+  def FN_MAXU = 18.U(ALUOps.SZ_ALU_FUNC.W)
+  def FN_MINU = 19.U(ALUOps.SZ_ALU_FUNC.W)
   def FN_A1ZERO = 8.U(ALUOps.SZ_ALU_FUNC.W)
   def FN_MUL = 20.U(ALUOps.SZ_ALU_FUNC.W)
   def FN_MULH = 21.U(ALUOps.SZ_ALU_FUNC.W)
@@ -63,9 +62,9 @@ object ALUOps {
   def cmpUnsigned(cmd: UInt) = cmd(1)
   def cmpInverted(cmd: UInt) = cmd(0)
   def cmpEq(cmd: UInt) = !cmd(3)
-  def isMIN(cmd:UInt)=(cmd(4,2)===("b100").U)
-  def isMUL(cmd:UInt)=(cmd(4,2)===("b101").U)
-  def isMAC(cmd:UInt)=(cmd(4,2)===("b110").U)
+  def isMIN(cmd: UInt) = (cmd(4, 2) === ("b100").U)
+  def isMUL(cmd: UInt) = (cmd(4, 2) === ("b101").U)
+  def isMAC(cmd: UInt) = (cmd(4, 2) === ("b110").U)
 }
 
 class VectorExeData(num_thread: Int = NUMBER_THREAD) extends Bundle {

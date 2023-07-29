@@ -1,4 +1,6 @@
-import mill._, scalalib._
+import $ivy.`com.goyeau::mill-scalafix_mill0.10:0.3.1`
+import com.goyeau.mill.scalafix.ScalafixModule
+import mill._, scalalib._, scalafmt._
 
 import mill.scalalib.TestModule.ScalaTest
 
@@ -56,7 +58,7 @@ object rocketchip extends `rocket-chip`.common.CommonRocketChip {
 
 
 
-object opengpgpu extends SbtModule { m =>
+object opengpgpu extends SbtModule with ScalafixModule with ScalafmtModule { m =>
   override def millSourcePath = os.pwd
   override def scalaVersion = "2.13.10"
   override def scalacOptions = Seq(

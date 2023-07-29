@@ -6,6 +6,7 @@ import freechips.rocketchip.amba.axi4._
 import org.chipsalliance.cde.config.Parameters
 import freechips.rocketchip.diplomacy._
 import freechips.rocketchip.system._
+import chiseltest.simulator.WriteVcdAnnotation
 
 import org.scalatest.flatspec.AnyFlatSpec
 
@@ -34,7 +35,7 @@ class AXI4RAMTest extends AnyFlatSpec with ChiselScalatestTester {
     implicit val p = new BaseConfig
     val axiram = LazyModule(new AXI4SlaveRAM())
     // val mymod = Module(axiram.module)
-    test (axiram.module) { dut =>
+    test (axiram.module).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // Write data to the axi4ram module
       dut.io.aw.valid.poke(true.B)
       dut.io.aw.bits.addr.poke(0x00000000L.U)

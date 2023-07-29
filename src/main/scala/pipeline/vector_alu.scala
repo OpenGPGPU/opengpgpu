@@ -1,16 +1,16 @@
 /*
  * Copyright (c) 2023 OpenGPGPU
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,7 +35,7 @@ class VectorALU(numThread: Int = NUMBER_THREAD) extends Module {
     val thread_mask_out = DecoupledIO(new ThreadMask(numThread))
   })
 
-  val alu=VecInit(Seq.fill(numThread)((Module(new ScalarALU())).io))
+  val alu = VecInit(Seq.fill(numThread)((Module(new ScalarALU())).io))
 
   val result = Module(new Queue(new VectorData(numThread), 1, pipe = true))
   val result2simt = Module(new Queue(new ThreadMask(numThread), 1, pipe = true))
@@ -58,9 +58,8 @@ class VectorALU(numThread: Int = NUMBER_THREAD) extends Module {
 }
 
 object VectorALURTL extends App {
-  emitVerilog (new VectorALU(), Array("--target-dir", "generated"))
+  emitVerilog(new VectorALU(), Array("--target-dir", "generated"))
 }
-
 
 object VectorALUFIR extends App {
   // ChiselStage.emitFirrtl(new VectorALU())
