@@ -28,11 +28,11 @@ class LSUTestTop(implicit p: Parameters) extends LazyModule {
   lazy val module = new Impl
   class Impl extends LazyModuleImp(this) {
     val io = IO(new Bundle {
-      val in     = Flipped(DecoupledIO(new LSUData(numThread)))
-      val out_WB = DecoupledIO(new LSUData(numThread))
+      val in     = Flipped(DecoupledIO(new LSUData()))
+      val out_wb = DecoupledIO(new LSUData())
     })
     lsu.module.io.in <> io.in
-    lsu.module.io.out_WB <> io.out_WB
+    lsu.module.io.out_wb <> io.out_wb
   }
 
 }
@@ -45,7 +45,7 @@ class LSUTest extends AnyFlatSpec with ChiselScalatestTester {
     implicit val p = new MyConfig 
     val lsu = LazyModule(new LSUTestTop)
     test (lsu.module).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      dut.io.out_WB.ready.poke(1.U)
+      dut.io.out_wb.ready.poke(1.U)
       dut.io.in.valid.poke(1.U)
       dut.io.in.bits.data(1).poke(1.U)
       dut.io.in.bits.data(3).poke(3.U)
@@ -72,14 +72,14 @@ class LSUTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.in.valid.poke(1.U)
       dut.io.in.bits.func.poke(0.U)
       dut.clock.step()
-      while(dut.io.out_WB.valid.peek().litToBoolean == false) {
+      while(dut.io.out_wb.valid.peek().litToBoolean == false) {
         dut.clock.step()
       }
 
-      dut.io.out_WB.bits.data(1).expect(1.U)
-      dut.io.out_WB.bits.data(3).expect(3.U)
-      dut.io.out_WB.bits.data(4).expect(4.U)
-      dut.io.out_WB.bits.data(6).expect(6.U)
+      dut.io.out_wb.bits.data(1).expect(1.U)
+      dut.io.out_wb.bits.data(3).expect(3.U)
+      dut.io.out_wb.bits.data(4).expect(4.U)
+      dut.io.out_wb.bits.data(6).expect(6.U)
     }
   }
 }

@@ -3,12 +3,14 @@ import chiseltest._
 import org.scalatest._
 
 import opengpgpu.pipeline._
+import opengpgpu.config._
 import org.scalatest.flatspec.AnyFlatSpec
 import chisel3.util._
 
 class ScalarALUTest extends AnyFlatSpec with ChiselScalatestTester {
   behavior of "ScalarALU"
 
+  implicit val p = new CoreConfig 
   it should "perform ADD operation correctly" in {
     test(new ScalarALU()) { c =>
       c.io.func.poke(ALUOps.FN_ADD)

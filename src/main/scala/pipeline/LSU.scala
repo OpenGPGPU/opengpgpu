@@ -38,8 +38,8 @@ class LSU(implicit p: Parameters) extends LazyModule {
   lazy val module = new Impl
   class Impl extends LazyModuleImp(this) {
     val io = IO(new Bundle {
-      val in = Flipped(DecoupledIO(new LSUData(numThread)))
-      val out_WB = DecoupledIO(new LSUData(numThread))
+      val in = Flipped(DecoupledIO(new LSUData()))
+      val out_wb = DecoupledIO(new LSUData())
     })
 
     object State extends ChiselEnum {
@@ -47,15 +47,15 @@ class LSU(implicit p: Parameters) extends LazyModule {
     }
     import State._
 
-    val in_que = Module(new Queue(new LSUData(numThread), 1, pipe = true))
-    io.in <> in_que.io.enq
+    val inQue = Module(new Queue(new LSUData(), 1, pipe = true))
+    io.in <> inQue.io.enq
 
     val deq_ready = Wire(Bool())
-    val deq_data = RegInit(0.U.asTypeOf(new LSUData(numThread)))
-    val out_data = RegInit(0.U.asTypeOf(new LSUData(numThread)))
+    val deq_data = RegInit(0.U.asTypeOf(new LSUData()))
+    val out_data = RegInit(0.U.asTypeOf(new LSUData()))
     val out_valid = RegInit(0.B)
-    val deq_valid = in_que.io.deq.valid
-    in_que.io.deq.ready := deq_ready
+    val deq_valid = inQue.io.deq.valid
+    inQue.io.deq.ready := deq_ready
 
     val state = RegInit(State.IDLE)
     val mem_counter = RegInit(0.U((log2Ceil(numThread) + 1).W))
@@ -68,11 +68,11 @@ class LSU(implicit p: Parameters) extends LazyModule {
     val load_finish = Wire(Bool())
     val store_finish = Wire(Bool())
 
-    load_finish := state === LOAD && io.out_WB.ready && rsp_counter === mem_counter
+    load_finish := state === LOAD && io.out_wb.ready && rsp_counter === mem_counter
     store_finish := state === STORE && rsp_counter === mem_counter
     deq_ready := state === IDLE || load_finish || store_finish
-    when(in_que.io.deq.fire) {
-      mem_counter := PopCount(in_que.io.deq.bits.mask)
+    when(inQue.io.deq.fire) {
+      mem_counter := PopCount(inQue.io.deq.bits.mask)
     }
 
     when(load_finish) {
@@ -82,23 +82,23 @@ class LSU(implicit p: Parameters) extends LazyModule {
       out_valid := 0.B
     }
 
-    io.out_WB.bits := out_data
-    io.out_WB.valid := out_valid
+    io.out_wb.bits := out_data
+    io.out_wb.valid := out_valid
 
     // state fsm
     switch(state) {
       is(State.IDLE) {
-        when(deq_valid && in_que.io.deq.bits.func(0) === 0.U) {
+        when(deq_valid && inQue.io.deq.bits.func(0) === 0.U) {
           state := LOAD
-        }.elsewhen(deq_valid && in_que.io.deq.bits.func(0) === 1.U) {
+        }.elsewhen(deq_valid && inQue.io.deq.bits.func(0) === 1.U) {
           state := STORE
         }
       }
       is(State.LOAD) {
-        when(io.out_WB.ready && rsp_counter === mem_counter) {
+        when(io.out_wb.ready && rsp_counter === mem_counter) {
           when(!deq_valid) {
             state := IDLE
-          }.elsewhen(deq_valid && in_que.io.deq.bits.func(0) === 1.U) {
+          }.elsewhen(deq_valid && inQue.io.deq.bits.func(0) === 1.U) {
             state := STORE
           }
         }
@@ -107,7 +107,7 @@ class LSU(implicit p: Parameters) extends LazyModule {
         when(rsp_counter === mem_counter) {
           when(!deq_valid) {
             state := IDLE
-          }.elsewhen(deq_valid && in_que.io.deq.bits.func(0) === 0.U) {
+          }.elsewhen(deq_valid && inQue.io.deq.bits.func(0) === 0.U) {
             state := LOAD
           }
         }
@@ -124,7 +124,7 @@ class LSU(implicit p: Parameters) extends LazyModule {
         when(out.ar.fire) {
           req_counter := req_counter + 1.U
 
-        }.elsewhen(io.out_WB.ready && rsp_counter === mem_counter) {
+        }.elsewhen(io.out_wb.ready && rsp_counter === mem_counter) {
           req_counter := 0.U
         }
       }
@@ -151,7 +151,7 @@ class LSU(implicit p: Parameters) extends LazyModule {
       is(State.LOAD) {
         when(out.r.fire) {
           rsp_counter := rsp_counter + 1.U
-        }.elsewhen(io.out_WB.ready && rsp_counter === mem_counter) {
+        }.elsewhen(io.out_wb.ready && rsp_counter === mem_counter) {
           rsp_counter := 0.U
         }
       }
@@ -170,19 +170,19 @@ class LSU(implicit p: Parameters) extends LazyModule {
     switch(state) {
       is(State.IDLE) {
         when(deq_valid) {
-          deq_data := in_que.io.deq.bits
+          deq_data := inQue.io.deq.bits
         }
       }
       is(State.LOAD) {
         when(out.r.fire) {
           deq_data.data(out.r.bits.id) := out.r.bits.data
-        }.elsewhen(io.out_WB.ready && rsp_counter === mem_counter) {
-          deq_data := in_que.io.deq.bits
+        }.elsewhen(io.out_wb.ready && rsp_counter === mem_counter) {
+          deq_data := inQue.io.deq.bits
         }
       }
       is(State.STORE) {
         when(rsp_counter === mem_counter) {
-          deq_data := in_que.io.deq.bits
+          deq_data := inQue.io.deq.bits
         }
       }
     }
