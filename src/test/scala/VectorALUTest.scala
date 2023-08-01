@@ -5,13 +5,14 @@ import org.scalatest._
 import org.scalatest.flatspec.AnyFlatSpec
 
 import opengpgpu.pipeline._
-import opengpgpu.config.parameters._
+import opengpgpu.config._
 
 
 class VectorALUTest extends AnyFlatSpec with ChiselScalatestTester {
   behavior of "VectorALU"
 
   it should "perform ALU operations correctly" in {
+    implicit val p = new CoreConfig
     test(new VectorALU()) { c =>
       c.io.in.valid.poke(1.U)
       c.io.in.bits.op1.map(x => x.poke(1.U))

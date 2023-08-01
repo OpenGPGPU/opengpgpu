@@ -25,20 +25,21 @@ package opengpgpu.pipeline
 import chisel3._
 import circt.stage.ChiselStage
 import chisel3.util._
-// import chisel3.stage.ChiselStage
-import opengpgpu.config.parameters._
+import org.chipsalliance.cde.config.Parameters
+import opengpgpu.config._
 
-class VectorALU(numThread: Int = NUMBER_THREAD) extends Module {
+class VectorALU(implicit p: Parameters) extends Module {
+  val numThread = p(ThreadNum)
   val io = IO(new Bundle {
-    val in = Flipped(DecoupledIO(new VectorExeData(numThread)))
-    val out = DecoupledIO(new VectorData(numThread))
-    val thread_mask_out = DecoupledIO(new ThreadMask(numThread))
+    val in = Flipped(DecoupledIO(new VectorExeData()))
+    val out = DecoupledIO(new VectorData())
+    val thread_mask_out = DecoupledIO(new ThreadMask())
   })
 
   val alu = VecInit(Seq.fill(numThread)((Module(new ScalarALU())).io))
 
-  val result = Module(new Queue(new VectorData(numThread), 1, pipe = true))
-  val result2simt = Module(new Queue(new ThreadMask(numThread), 1, pipe = true))
+  val result = Module(new Queue(new VectorData(), 1, pipe = true))
+  val result2simt = Module(new Queue(new ThreadMask(), 1, pipe = true))
 
   for (x <- 0 until numThread) {
     alu(x).op1 := io.in.bits.op1(x)
@@ -58,11 +59,13 @@ class VectorALU(numThread: Int = NUMBER_THREAD) extends Module {
 }
 
 object VectorALURTL extends App {
+  implicit val p = new CoreConfig
   emitVerilog(new VectorALU(), Array("--target-dir", "generated"))
 }
 
 object VectorALUFIR extends App {
   // ChiselStage.emitFirrtl(new VectorALU())
+  implicit val p = new CoreConfig
   ChiselStage.emitCHIRRTL(new VectorALU())
 }
 

@@ -20,33 +20,35 @@
  * SOFTWARE.
  */
 
-package opengpgpu.libs
-
 import chisel3._
-import chisel3.util._
+import opengpgpu.config._
 
-// no arbiter, user should avoid conflict
-class CrossbarIO[T <: Data](gen: T, nInputs: Int, nOutputs: Int) extends Bundle {
-  val in  = Vec(nInputs, Flipped(Decoupled(gen)))
-  val out = Vec(nOutputs, Decoupled(gen))
-  val sel = Input(Vec(nOutputs, UInt(log2Ceil(nInputs).W)))
+class ReadWriteSmem(width: Int = 32, depth: Int = 1024, addrWidth: Int = 10) extends Module {
+  val io = IO(new Bundle {
+    val enable = Input(Bool())
+    val write = Input(Bool())
+    val addr = Input(UInt(addrWidth.W))
+    val dataIn = Input(UInt(width.W))
+    val dataOut = Output(UInt(width.W))
+  })
+
+  val mem = SyncReadMem(depth, UInt(width.W))
+  mem.write(io.addr, io.dataIn)
+  io.dataOut := mem.read(io.addr, io.enable)
 }
 
-class Crossbar[T <: Data](gen: T, nInputs: Int, nOutputs: Int) extends Module {
-  val io = IO(new CrossbarIO(gen, nInputs, nOutputs))
+class MaskedReadWriteSmem(width: Int = 32, depth: Int = 1024, addrWidth: Int = 10, vecLen: Int = 32)
+    extends Module {
+  val io = IO(new Bundle {
+    val enable = Input(Bool())
+    val write = Input(Bool())
+    val addr = Input(UInt(addrWidth.W))
+    val mask = Input(Vec(vecLen, Bool()))
+    val dataIn = Input(Vec(vecLen, UInt(width.W)))
+    val dataOut = Output(Vec(vecLen, UInt(width.W)))
+  })
 
-  for (i <- 0 until nInputs) {
-    io.in(i).ready := 0.B
-  }
-
-  for (i <- 0 until nOutputs) {
-    val selectedInput = io.in(io.sel(i))
-    io.out(i).bits      := selectedInput.bits
-    io.out(i).valid     := selectedInput.valid
-    selectedInput.ready := io.out(i).ready
-  }
-}
-
-object CrossbarRTL extends App {
-  emitVerilog(new Crossbar(UInt(8.W), 4, 2), Array("--target-dir", "generated"))
+  val mem = SyncReadMem(depth, Vec(vecLen, UInt(width.W)))
+  mem.write(io.addr, io.dataIn, io.mask)
+  io.dataOut := mem.read(io.addr, io.enable)
 }

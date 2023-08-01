@@ -24,15 +24,12 @@ package opengpgpu.pipeline
 
 import chisel3._
 import chisel3.util._
+import org.chipsalliance.cde.config.Parameters
+import opengpgpu.config._
 
-/*
-==== Supported Instructions ====
-RV32I except:
-ecall/ebreak
- */
-import opengpgpu.config.parameters._
 import opengpgpu.pipeline.ALUOps._
-class ScalarALU() extends Module {
+class ScalarALU(implicit p: Parameters) extends Module {
+  val xLen = p(XLen)
   val io = IO(new Bundle() {
     val func = Input(UInt(5.W))
     val op1 = Input(UInt(xLen.W))
@@ -95,5 +92,6 @@ class ScalarALU() extends Module {
 }
 
 object ALURTL extends App {
+  implicit val p = new CoreConfig
   emitVerilog(new ScalarALU(), Array("--target-dir", "generated"))
 }

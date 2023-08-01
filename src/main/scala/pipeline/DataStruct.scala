@@ -24,7 +24,8 @@ package opengpgpu.pipeline
 
 import chisel3._
 import chisel3.util._
-import opengpgpu.config.parameters._
+import org.chipsalliance.cde.config.Parameters
+import opengpgpu.config._
 
 object ALUOps {
   val SZ_ALU_FUNC = 5
@@ -67,30 +68,77 @@ object ALUOps {
   def isMAC(cmd: UInt) = (cmd(4, 2) === ("b110").U)
 }
 
-class VectorExeData(num_thread: Int = NUMBER_THREAD) extends Bundle {
-  val op1 = Vec(num_thread, UInt(xLen.W))
-  val op2 = Vec(num_thread, UInt(xLen.W))
+class VectorExeData(implicit p: Parameters) extends Bundle {
+  val numThreads = p(ThreadNum)
+  val xLen = p(XLen)
+
+  val op1 = Vec(numThreads, UInt(xLen.W))
+  val op2 = Vec(numThreads, UInt(xLen.W))
   val func = UInt(ALUOps.SZ_ALU_FUNC.W)
-  val mask = Vec(num_thread, Bool())
+  val mask = Vec(numThreads, Bool())
 }
 
-class LSUData(num_thread: Int = NUMBER_THREAD) extends Bundle {
-  val addr = Vec(num_thread, UInt(ADDR_WIDTH.W))
-  val data = Vec(num_thread, UInt(xLen.W))
-  val mask = Vec(num_thread, Bool())
+class LSUData(implicit p: Parameters) extends Bundle {
+  val numThreads = p(ThreadNum)
+  val xLen = p(XLen)
+  val addrWidth = p(AddrWidth)
+  val numWarps = p(WarpNum)
+  val regIDWidth = p(RegIDWidth)
+
+  val addr = Vec(numThreads, UInt(addrWidth.W))
+  val data = Vec(numThreads, UInt(xLen.W))
+  val mask = Vec(numThreads, Bool())
   val func = UInt(ALUOps.SZ_ALU_FUNC.W)
-  val wid = UInt(log2Ceil(NUMBER_WARP).W)
-  val pc = UInt(ADDR_WIDTH.W)
+  val wid = UInt(log2Ceil(numWarps).W)
+
+  val pc = UInt(addrWidth.W)
   val fence = Bool()
   val offsset = UInt(xLen.W)
-  val rd = UInt(REG_ID_WIDTH.W)
+  val rd = UInt(regIDWidth.W)
 }
 
-class VectorData(num_thread: Int = NUMBER_THREAD) extends Bundle {
-  val data = Vec(num_thread, UInt(xLen.W))
-  val mask = Vec(num_thread, Bool())
+class IBufferData(implicit p: Parameters) extends Bundle {
+  val numThreads = p(ThreadNum)
+  val xLen = p(XLen)
+  val addrWidth = p(AddrWidth)
+  val numWarps = p(WarpNum)
+  val regIDWidth = p(RegIDWidth)
+
+  val wid = UInt(log2Ceil(numWarps).W)
+  val mask = Vec(numThreads, Bool())
+  val writeback = Bool()
+  val pc = UInt(addrWidth.W)
+  val rd = UInt(regIDWidth.W)
+  val rs1 = UInt(regIDWidth.W)
+  val rs2 = UInt(regIDWidth.W)
+  val rs3 = UInt(regIDWidth.W)
 }
 
-class ThreadMask(num_thread: Int = NUMBER_THREAD) extends Bundle {
-  val mask = Vec(num_thread, Bool())
+class WritebackData(implicit p: Parameters) extends Bundle {
+  val numThreads = p(ThreadNum)
+  val xLen = p(XLen)
+  val addrWidth = p(AddrWidth)
+  val numWarps = p(WarpNum)
+  val regIDWidth = p(RegIDWidth)
+
+  val wid = UInt(log2Ceil(numWarps).W)
+  val mask = Vec(numThreads, Bool())
+  val eop = Bool()
+  val pc = UInt(addrWidth.W)
+  val rd = UInt(regIDWidth.W)
+  val data = Vec(numThreads, UInt(xLen.W))
+}
+
+class VectorData(implicit p: Parameters) extends Bundle {
+  val numThreads = p(ThreadNum)
+  val xLen = p(XLen)
+
+  val data = Vec(numThreads, UInt(xLen.W))
+  val mask = Vec(numThreads, Bool())
+}
+
+class ThreadMask(implicit p: Parameters) extends Bundle {
+  val numThreads = p(ThreadNum)
+
+  val mask = Vec(numThreads, Bool())
 }
