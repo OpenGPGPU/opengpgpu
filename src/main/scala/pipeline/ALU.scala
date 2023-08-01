@@ -92,9 +92,6 @@ class ScalarALU(implicit p: Parameters) extends Module {
 }
 
 object ALURTL extends App {
-  <<<<<<< HEAD: src / main / scala / pipeline / ALU.scala
   implicit val p = new CoreConfig
-  =======
-  >>>>>>> main: src / main / scala / pipeline / alu.scala
   emitVerilog(new ScalarALU(), Array("--target-dir", "generated"))
 }
