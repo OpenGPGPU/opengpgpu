@@ -38,7 +38,7 @@ class ScoreBoard(implicit p: Parameters) extends Module {
   // Registers to hold the state of inuse_regs
   val inuseRegs = Reg(Vec(numWarps, Vec(numRegs, Bool())))
 
-  // Wires to get the state immediately 
+  // Wires to get the state immediately
   val inuseRegsCurrent = Wire(Vec(numWarps, Vec(numRegs, Bool())))
 
   // Reserve a register when instruction is valid, ready, and writeback is enabled
@@ -83,10 +83,16 @@ class ScoreBoard(implicit p: Parameters) extends Module {
 
   when(io.ibuffer.valid && !io.ibuffer.ready) {
     deadlockCtr := deadlockCtr + 1.U
-    assert(deadlockCtr < deadlockTimeout, cf"Deadlock detected - PC: 0x${Hexadecimal(io.ibuffer.bits.pc)}, wid: ${io.ibuffer.bits.wid}, rd: ${io.ibuffer.bits.rd}")
+    assert(
+      deadlockCtr < deadlockTimeout,
+      cf"Deadlock detected - PC: 0x${Hexadecimal(io.ibuffer.bits.pc)}, wid: ${io.ibuffer.bits.wid}, rd: ${io.ibuffer.bits.rd}"
+    )
   }.elsewhen(io.ibuffer.valid && io.ibuffer.ready) {
     deadlockCtr := 0.U
   }.elsewhen(io.writeback.valid && io.writeback.ready && io.writeback.bits.eop) {
-    assert(inuseRegs(io.writeback.bits.wid)(io.writeback.bits.rd), cf"Invalid writeback register - PC: 0x${Hexadecimal(io.writeback.bits.pc)}, wid: ${io.writeback.bits.wid}, rd: ${io.writeback.bits.rd}")
+    assert(
+      inuseRegs(io.writeback.bits.wid)(io.writeback.bits.rd),
+      cf"Invalid writeback register - PC: 0x${Hexadecimal(io.writeback.bits.pc)}, wid: ${io.writeback.bits.wid}, rd: ${io.writeback.bits.rd}"
+    )
   }
 }
