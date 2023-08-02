@@ -29,7 +29,7 @@ class LSUTestTop(implicit p: Parameters) extends LazyModule {
   class Impl extends LazyModuleImp(this) {
     val io = IO(new Bundle {
       val in     = Flipped(DecoupledIO(new LSUData()))
-      val out_wb = DecoupledIO(new LSUData())
+      val out_wb = DecoupledIO(new CommitData())
     })
     lsu.module.io.in <> io.in
     lsu.module.io.out_wb <> io.out_wb

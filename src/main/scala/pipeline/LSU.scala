@@ -39,7 +39,7 @@ class LSU(implicit p: Parameters) extends LazyModule {
   class Impl extends LazyModuleImp(this) {
     val io = IO(new Bundle {
       val in = Flipped(DecoupledIO(new LSUData()))
-      val out_wb = DecoupledIO(new LSUData())
+      val out_wb = DecoupledIO(new CommitData())
     })
 
     object State extends ChiselEnum {
@@ -52,7 +52,7 @@ class LSU(implicit p: Parameters) extends LazyModule {
 
     val deq_ready = Wire(Bool())
     val deq_data = RegInit(0.U.asTypeOf(new LSUData()))
-    val out_data = RegInit(0.U.asTypeOf(new LSUData()))
+    val out_data = RegInit(0.U.asTypeOf(new CommitData()))
     val out_valid = RegInit(0.B)
     val deq_valid = inQue.io.deq.valid
     inQue.io.deq.ready := deq_ready
@@ -76,7 +76,12 @@ class LSU(implicit p: Parameters) extends LazyModule {
     }
 
     when(load_finish) {
-      out_data := deq_data
+      out_data.pc := deq_data.pc
+      out_data.data := deq_data.data
+      out_data.wid := deq_data.wid
+      out_data.mask := deq_data.mask
+      out_data.eop := 1.B
+      out_data.rd := deq_data.rd
       out_valid := 1.B
     }.otherwise {
       out_valid := 0.B
