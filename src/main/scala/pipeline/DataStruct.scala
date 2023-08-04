@@ -68,7 +68,7 @@ object ALUOps {
   def isMAC(cmd: UInt) = (cmd(4, 2) === ("b110").U)
 }
 
-class VectorExeData(implicit p: Parameters) extends Bundle {
+class ALUExeData(implicit p: Parameters) extends Bundle {
   val numThreads = p(ThreadNum)
   val xLen = p(XLen)
 
@@ -97,6 +97,30 @@ class LSUData(implicit p: Parameters) extends Bundle {
   val rd = UInt(regIDWidth.W)
 }
 
+class CommitData(implicit p: Parameters) extends Bundle {
+  val numThreads = p(ThreadNum)
+  val xLen = p(XLen)
+  val addrWidth = p(AddrWidth)
+  val numWarps = p(WarpNum)
+  val regIDWidth = p(RegIDWidth)
+
+  val wid = UInt(log2Ceil(numWarps).W)
+  val mask = Vec(numThreads, Bool())
+  val pc = UInt(addrWidth.W)
+  val eop = Bool()
+  val rd = UInt(regIDWidth.W)
+  val data = Vec(numThreads, UInt(xLen.W))
+}
+
+class StackData(implicit p: Parameters) extends Bundle {
+  val numThreads = p(ThreadNum)
+  val addrWidth = p(AddrWidth)
+
+  val mask = Vec(numThreads, Bool())
+  val pc = UInt(addrWidth.W)
+  val orig_mask = Vec(numThreads, Bool())
+}
+
 class IBufferData(implicit p: Parameters) extends Bundle {
   val numThreads = p(ThreadNum)
   val xLen = p(XLen)
@@ -123,13 +147,13 @@ class WritebackData(implicit p: Parameters) extends Bundle {
 
   val wid = UInt(log2Ceil(numWarps).W)
   val mask = Vec(numThreads, Bool())
-  val eop = Bool()
   val pc = UInt(addrWidth.W)
+  val eop = Bool()
   val rd = UInt(regIDWidth.W)
   val data = Vec(numThreads, UInt(xLen.W))
 }
 
-class VectorData(implicit p: Parameters) extends Bundle {
+class ALUData(implicit p: Parameters) extends Bundle {
   val numThreads = p(ThreadNum)
   val xLen = p(XLen)
 

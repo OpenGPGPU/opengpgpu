@@ -20,40 +20,32 @@
  * SOFTWARE.
  */
 
-package opengpgpu.libs
+package opengpgpu.pipeline
 
 import chisel3._
+import chisel3.util._
+import org.chipsalliance.cde.config.Parameters
 import opengpgpu.config._
 
-class ReadWriteSmem(width: Int = 32, depth: Int = 1024, addrWidth: Int = 10) extends Module {
+class Writeback(implicit p: Parameters) extends Module {
   val io = IO(new Bundle {
-    val enable = Input(Bool())
-    val write = Input(Bool())
-    val addr = Input(UInt(addrWidth.W))
-    val dataIn = Input(UInt(width.W))
-    val dataOut = Output(UInt(width.W))
+    val alu_commit = Flipped(DecoupledIO(new CommitData()))
+    val lsu_commit = Flipped(DecoupledIO(new CommitData()))
+    val writeback = DecoupledIO(new CommitData())
   })
 
-  val mem = SyncReadMem(depth, UInt(width.W))
-  when (io.enable && io.write) {
-    mem.write(io.addr, io.dataIn)
-  }
-  io.dataOut := mem.read(io.addr, io.enable)
-}
+  val rsp_data = VecInit(
+    Seq(
+      io.alu_commit,
+      io.lsu_commit
+    )
+  )
 
-class MaskedReadWriteSmem(width: Int = 32, depth: Int = 1024, addrWidth: Int = 10, vecLen: Int = 32) extends Module {
-  val io = IO(new Bundle {
-    val enable = Input(Bool())
-    val write = Input(Bool())
-    val addr = Input(UInt(addrWidth.W))
-    val mask = Input(Vec(vecLen, Bool()))
-    val dataIn = Input(Vec(vecLen, UInt(width.W)))
-    val dataOut = Output(Vec(vecLen, UInt(width.W)))
-  })
+  val rsp_arbiter = Module(new RRArbiter(new CommitData(), 2))
+  rsp_arbiter.io.in <> rsp_data
 
-  val mem = SyncReadMem(depth, Vec(vecLen, UInt(width.W)))
-  when (io.enable && io.write) {
-    mem.write(io.addr, io.dataIn, io.mask)
-  }
-  io.dataOut := mem.read(io.addr, io.enable)
+  val outQue = Module(new Queue(new CommitData(), 1, pipe = true))
+  outQue.io.enq <> rsp_arbiter.io.out
+
+  io.writeback <> outQue.io.deq
 }
