@@ -112,6 +112,15 @@ class CommitData(implicit p: Parameters) extends Bundle {
   val data = Vec(numThreads, UInt(xLen.W))
 }
 
+class StackData(implicit p: Parameters) extends Bundle {
+  val numThreads = p(ThreadNum)
+  val addrWidth = p(AddrWidth)
+
+  val mask = Vec(numThreads, Bool())
+  val pc = UInt(addrWidth.W)
+  val orig_mask = Vec(numThreads, Bool())
+}
+
 class IBufferData(implicit p: Parameters) extends Bundle {
   val numThreads = p(ThreadNum)
   val xLen = p(XLen)

@@ -48,6 +48,7 @@ case object RegNum extends Field[Int]
 case object RegIDWidth extends Field[Int]
 case object WarpIDWidth extends Field[Int]
 case object AddrWidth extends Field[Int]
+case object StackDepth extends Field[Int]
 case object CacheBlockBytes extends Field[Int](64)
 case object ExtMem extends Field[Option[MemoryPortParams]](None)
 case object MemoryBusKey extends Field[MemoryBusParams]
@@ -62,6 +63,7 @@ class CoreConfig
       case RegIDWidth      => log2Ceil(site(RegNum))
       case WarpIDWidth     => log2Ceil(site(WarpNum))
       case AddrWidth       => 32
+      case StackDepth      => 16
       case CacheBlockBytes => 4
       case MemoryBusKey    => MemoryBusParams(beatBytes = site(XLen) / 8, blockBytes = site(CacheBlockBytes))
       case SystemBusKey    => SystemBusParams(beatBytes = site(XLen) / 8, blockBytes = site(CacheBlockBytes))
