@@ -35,7 +35,7 @@ class ReadWriteSmem(width: Int = 32, depth: Int = 1024, addrWidth: Int = 10) ext
   })
 
   val mem = SyncReadMem(depth, UInt(width.W))
-  when (io.enable && io.write) {
+  when(io.enable && io.write) {
     mem.write(io.addr, io.dataIn)
   }
   io.dataOut := mem.read(io.addr, io.enable)
@@ -52,7 +52,7 @@ class MaskedReadWriteSmem(width: Int = 32, depth: Int = 1024, addrWidth: Int = 1
   })
 
   val mem = SyncReadMem(depth, Vec(vecLen, UInt(width.W)))
-  when (io.enable && io.write) {
+  when(io.enable && io.write) {
     mem.write(io.addr, io.dataIn, io.mask)
   }
   io.dataOut := mem.read(io.addr, io.enable)

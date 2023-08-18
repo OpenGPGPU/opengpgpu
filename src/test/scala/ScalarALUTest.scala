@@ -6,14 +6,16 @@ import opengpgpu.pipeline._
 import opengpgpu.config._
 import org.scalatest.flatspec.AnyFlatSpec
 import chisel3.util._
+import freechips.rocketchip.rocket._
 
 class ScalarALUTest extends AnyFlatSpec with ChiselScalatestTester {
   behavior of "ScalarALU"
 
   implicit val p = new CoreConfig 
+  val aluFn = new ALUFN
   it should "perform ADD operation correctly" in {
-    test(new ScalarALU()) { c =>
-      c.io.func.poke(ALUOps.FN_ADD)
+    test(new ScalarALU(new ALUFN)) { c =>
+      c.io.func.poke(aluFn.FN_ADD)
       c.io.op1.poke(5.U)
       c.io.op2.poke(7.U)
       c.io.out.expect(12.U)
@@ -21,8 +23,8 @@ class ScalarALUTest extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   it should "perform SUB operation correctly" in {
-    test(new ScalarALU()) { c =>
-      c.io.func.poke(ALUOps.FN_SUB)
+    test(new ScalarALU(new ALUFN)) { c =>
+      c.io.func.poke(aluFn.FN_SUB)
       c.io.op1.poke(10.U)
       c.io.op2.poke(3.U)
       c.io.out.expect(7.U)
@@ -30,8 +32,8 @@ class ScalarALUTest extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   it should "perform SLT operation correctly" in {
-    test(new ScalarALU()) { c =>
-      c.io.func.poke(ALUOps.FN_SLT)
+    test(new ScalarALU(new ALUFN)) { c =>
+      c.io.func.poke(aluFn.FN_SLT)
       c.io.op1.poke(5.U)
       c.io.op2.poke(7.U)
       c.io.cmp_out.expect(true.B)
@@ -40,8 +42,8 @@ class ScalarALUTest extends AnyFlatSpec with ChiselScalatestTester {
 
 
   it should "perform SLTU operation correctly" in {
-    test(new ScalarALU()) { c =>
-      c.io.func.poke(ALUOps.FN_SLTU)
+    test(new ScalarALU(new ALUFN)) { c =>
+      c.io.func.poke(aluFn.FN_SLTU)
       c.io.op1.poke(5.U)
       c.io.op2.poke(7.U)
       c.io.cmp_out.expect(true.B)
@@ -49,8 +51,8 @@ class ScalarALUTest extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   it should "perform AND operation correctly" in {
-    test(new ScalarALU()) { c =>
-      c.io.func.poke(ALUOps.FN_AND)
+    test(new ScalarALU(new ALUFN)) { c =>
+      c.io.func.poke(aluFn.FN_AND)
       c.io.op1.poke(0x0F.U)
       c.io.op2.poke(0x33.U)
       c.io.out.expect(0x03.U)
@@ -58,8 +60,8 @@ class ScalarALUTest extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   it should "perform OR operation correctly" in {
-    test(new ScalarALU()) { c =>
-      c.io.func.poke(ALUOps.FN_OR)
+    test(new ScalarALU(new ALUFN)) { c =>
+      c.io.func.poke(aluFn.FN_OR)
       c.io.op1.poke(0x0F.U)
       c.io.op2.poke(0x33.U)
       c.io.out.expect(0x3F.U)
@@ -67,8 +69,8 @@ class ScalarALUTest extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   it should "perform XOR operation correctly" in {
-    test(new ScalarALU()) { c =>
-      c.io.func.poke(ALUOps.FN_XOR)
+    test(new ScalarALU(new ALUFN)) { c =>
+      c.io.func.poke(aluFn.FN_XOR)
       c.io.op1.poke(0x0F.U)
       c.io.op2.poke(0x33.U)
       c.io.out.expect(0x3C.U)
@@ -76,8 +78,8 @@ class ScalarALUTest extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   it should "perform SLL operation correctly" in {
-    test(new ScalarALU()) { c =>
-      c.io.func.poke(ALUOps.FN_SL)
+    test(new ScalarALU(new ALUFN)) { c =>
+      c.io.func.poke(aluFn.FN_SL)
       c.io.op1.poke(0x01.U)
       c.io.op2.poke(0x03.U)
       c.io.out.expect(0x08.U)
@@ -85,8 +87,8 @@ class ScalarALUTest extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   it should "perform SRL operation correctly" in {
-    test(new ScalarALU()) { c =>
-      c.io.func.poke(ALUOps.FN_SR)
+    test(new ScalarALU(new ALUFN)) { c =>
+      c.io.func.poke(aluFn.FN_SR)
       c.io.op1.poke(0x10.U)
       c.io.op2.poke(0x02.U)
       c.io.out.expect(0x04.U)
@@ -94,8 +96,8 @@ class ScalarALUTest extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   it should "perform SRA operation correctly" in {
-    test(new ScalarALU()) { c =>
-      c.io.func.poke(ALUOps.FN_SRA)
+    test(new ScalarALU(new ALUFN)) { c =>
+      c.io.func.poke(aluFn.FN_SRA)
       c.io.op1.poke(0x10.U)
       c.io.op2.poke(0x02.U)
       c.io.out.expect(0x04.U)
@@ -103,8 +105,8 @@ class ScalarALUTest extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   it should "perform SLTU operation correctly with unsigned inputs" in {
-    test(new ScalarALU()) { c =>
-      c.io.func.poke(ALUOps.FN_SLTU)
+    test(new ScalarALU(new ALUFN)) { c =>
+      c.io.func.poke(aluFn.FN_SLTU)
       c.io.op1.poke(10.U)
       c.io.op2.poke(3.U)
       c.io.cmp_out.expect(false.B)
