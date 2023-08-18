@@ -44,8 +44,8 @@ class SIMTStack(implicit p: Parameters) extends Module {
     val full = Output(Bool())
   })
 
-  val stack_addr = RegInit(0.U(log2Ceil(stackDepth+1).W))
-  val stack_pop_addr = RegInit(0.U(log2Ceil(stackDepth+1).W))
+  val stack_addr = RegInit(0.U(log2Ceil(stackDepth + 1).W))
+  val stack_pop_addr = RegInit(0.U(log2Ceil(stackDepth + 1).W))
   val out_diverge = RegInit(0.B)
   val out_data = Wire(new StackData())
   val diverge_status = RegInit(VecInit(Seq.fill(stackDepth)(false.B)))
@@ -58,21 +58,21 @@ class SIMTStack(implicit p: Parameters) extends Module {
   stack_sram.io.dataIn := io.in_data.asUInt
   out_data := stack_sram.io.dataOut.asTypeOf(new StackData())
 
-  when (io.push) {
+  when(io.push) {
     stack_addr := stack_addr + 1.U
     stack_pop_addr := stack_addr
-  }.elsewhen (io.pop && ~diverge_status(stack_pop_addr)) {
+  }.elsewhen(io.pop && ~diverge_status(stack_pop_addr)) {
     stack_addr := stack_addr - 1.U
     stack_pop_addr := stack_pop_addr - 1.U
   }
 
-  when (io.push) {
+  when(io.push) {
     diverge_status(stack_addr) := io.in_diverge
-  }.elsewhen (io.pop) {
+  }.elsewhen(io.pop) {
     diverge_status(stack_pop_addr) := 0.B
     out_diverge := diverge_status(stack_pop_addr)
   }
-  
+
   io.empty := stack_addr === 0.U
   io.full := stack_addr === stackDepth.U
   io.out_diverge := out_diverge

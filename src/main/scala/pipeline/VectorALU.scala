@@ -27,6 +27,7 @@ import circt.stage.ChiselStage
 import chisel3.util._
 import org.chipsalliance.cde.config.Parameters
 import opengpgpu.config._
+import freechips.rocketchip.rocket._
 
 class VectorALU(implicit p: Parameters) extends Module {
   val numThread = p(ThreadNum)
@@ -36,7 +37,7 @@ class VectorALU(implicit p: Parameters) extends Module {
     val thread_mask_out = DecoupledIO(new ThreadMask())
   })
 
-  val alu = VecInit(Seq.fill(numThread)((Module(new ScalarALU())).io))
+  val alu = VecInit(Seq.fill(numThread)((Module(new ScalarALU(new ALUFN))).io))
 
   val result = Module(new Queue(new ALUData(), 1, pipe = true))
   val result2simt = Module(new Queue(new ThreadMask(), 1, pipe = true))

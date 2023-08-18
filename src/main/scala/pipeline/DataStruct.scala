@@ -26,55 +26,15 @@ import chisel3._
 import chisel3.util._
 import org.chipsalliance.cde.config.Parameters
 import opengpgpu.config._
-
-object ALUOps {
-  val SZ_ALU_FUNC = 5
-  def FN_X = BitPat("b?????")
-  def FN_ADD = 0.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_SL = 1.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_SEQ = 2.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_SNE = 3.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_XOR = 4.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_SR = 5.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_OR = 6.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_AND = 7.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_SUB = 10.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_SRA = 11.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_SLT = 12.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_SGE = 13.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_SLTU = 14.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_SGEU = 15.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_MAX = 16.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_MIN = 17.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_MAXU = 18.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_MINU = 19.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_A1ZERO = 8.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_MUL = 20.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_MULH = 21.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_MULHU = 22.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_MULHSU = 23.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_MACC = 24.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_NMSAC = 25.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_MADD = 26.U(ALUOps.SZ_ALU_FUNC.W)
-  def FN_NMSUB = 27.U(ALUOps.SZ_ALU_FUNC.W)
-
-  def isSub(cmd: UInt) = (cmd >= FN_SUB) & (cmd <= FN_SGEU)
-  def isCmp(cmd: UInt) = (cmd >= FN_SLT) & (cmd <= FN_SGEU)
-  def cmpUnsigned(cmd: UInt) = cmd(1)
-  def cmpInverted(cmd: UInt) = cmd(0)
-  def cmpEq(cmd: UInt) = !cmd(3)
-  def isMIN(cmd: UInt) = (cmd(4, 2) === ("b100").U)
-  def isMUL(cmd: UInt) = (cmd(4, 2) === ("b101").U)
-  def isMAC(cmd: UInt) = (cmd(4, 2) === ("b110").U)
-}
+import freechips.rocketchip.rocket._
 
 class ALUExeData(implicit p: Parameters) extends Bundle {
   val numThreads = p(ThreadNum)
   val xLen = p(XLen)
-
+  val aluFn = new ALUFN
   val op1 = Vec(numThreads, UInt(xLen.W))
   val op2 = Vec(numThreads, UInt(xLen.W))
-  val func = UInt(ALUOps.SZ_ALU_FUNC.W)
+  val func = UInt(aluFn.SZ_ALU_FN.W)
   val mask = Vec(numThreads, Bool())
 }
 
@@ -84,11 +44,12 @@ class LSUData(implicit p: Parameters) extends Bundle {
   val addrWidth = p(AddrWidth)
   val numWarps = p(WarpNum)
   val regIDWidth = p(RegIDWidth)
+  val aluFn = new ALUFN
 
   val addr = Vec(numThreads, UInt(addrWidth.W))
   val data = Vec(numThreads, UInt(xLen.W))
   val mask = Vec(numThreads, Bool())
-  val func = UInt(ALUOps.SZ_ALU_FUNC.W)
+  val func = UInt(aluFn.SZ_ALU_FN.W)
   val wid = UInt(log2Ceil(numWarps).W)
 
   val pc = UInt(addrWidth.W)
@@ -119,6 +80,54 @@ class StackData(implicit p: Parameters) extends Bundle {
   val mask = Vec(numThreads, Bool())
   val pc = UInt(addrWidth.W)
   val orig_mask = Vec(numThreads, Bool())
+}
+
+class InstData(implicit p: Parameters) extends Bundle {
+  val numThreads = p(ThreadNum)
+  val addrWidth = p(AddrWidth)
+  val numWarps = p(WarpNum)
+
+  val mask = Vec(numThreads, Bool())
+  val wid = UInt(log2Ceil(numWarps).W)
+  val pc = UInt(addrWidth.W)
+  val data = UInt(32.W)
+}
+
+object ExType {
+  val SZ_EX_TYPE = 3
+}
+
+class DecodeData(implicit p: Parameters) extends Bundle {
+  val numThreads = p(ThreadNum)
+  val xLen = p(XLen)
+  val addrWidth = p(AddrWidth)
+  val numWarps = p(WarpNum)
+  val regIDWidth = p(RegIDWidth)
+  val aluFn = new ALUFN
+
+  val wid = UInt(log2Ceil(numWarps).W)
+  val mask = Vec(numThreads, Bool())
+  val wb = Bool()
+  val imm = UInt(xLen.W)
+  val use_pc = Bool()
+  val use_imm = Bool()
+  // onehot
+  val ex_type = UInt(ExType.SZ_EX_TYPE.W)
+  val func = UInt(aluFn.SZ_ALU_FN.W)
+  val mem_cmd = UInt(1.W)
+  val branch = UInt(4.W)
+  val pc = UInt(addrWidth.W)
+  val rd = UInt(regIDWidth.W)
+  val rs1 = UInt(regIDWidth.W)
+  val rs2 = UInt(regIDWidth.W)
+}
+
+class WarpControlData(implicit p: Parameters) extends Bundle {
+  val numWarps = p(WarpNum)
+
+  val wid = UInt(log2Ceil(numWarps).W)
+  val join = Bool()
+  val stall = Bool()
 }
 
 class IBufferData(implicit p: Parameters) extends Bundle {
