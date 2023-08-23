@@ -31,7 +31,7 @@ class ScoreBoard(implicit p: Parameters) extends Module {
   val numWarps = p(WarpNum)
   val numRegs = p(RegNum)
   val io = IO(new Bundle {
-    val ibuffer = Flipped(DecoupledIO(new IBufferData()))
+    val ibuffer = Flipped(DecoupledIO(new DecodeData()))
     val writeback = Flipped(DecoupledIO(new WritebackData()))
   })
 
@@ -42,7 +42,7 @@ class ScoreBoard(implicit p: Parameters) extends Module {
   val inuseRegsCurrent = Wire(Vec(numWarps, Vec(numRegs, Bool())))
 
   // Reserve a register when instruction is valid, ready, and writeback is enabled
-  val reserveReg = io.ibuffer.valid && io.ibuffer.ready && io.ibuffer.bits.writeback
+  val reserveReg = io.ibuffer.valid && io.ibuffer.ready && io.ibuffer.bits.wb
 
   // Release a register when writeback to a register is complete (and it is the last instruction of a packet)
   val releaseReg = io.writeback.valid && io.writeback.ready && io.writeback.bits.eop
@@ -67,15 +67,13 @@ class ScoreBoard(implicit p: Parameters) extends Module {
   val deqInuseRd = RegInit(false.B)
   val deqInuseRs1 = RegInit(false.B)
   val deqInuseRs2 = RegInit(false.B)
-  val deqInuseRs3 = RegInit(false.B)
 
   deqInuseRd := inuseRegsCurrent(io.ibuffer.bits.wid)(io.ibuffer.bits.rd)
   deqInuseRs1 := inuseRegsCurrent(io.ibuffer.bits.wid)(io.ibuffer.bits.rs1)
   deqInuseRs2 := inuseRegsCurrent(io.ibuffer.bits.wid)(io.ibuffer.bits.rs2)
-  deqInuseRs3 := inuseRegsCurrent(io.ibuffer.bits.wid)(io.ibuffer.bits.rs3)
 
   io.writeback.ready := true.B
-  io.ibuffer.ready := !(deqInuseRd || deqInuseRs1 || deqInuseRs2 || deqInuseRs3)
+  io.ibuffer.ready := !(deqInuseRd || deqInuseRs1 || deqInuseRs2)
 
   // Check and assert if any deadlock is detected
   val deadlockCtr = RegInit(0.U(32.W))

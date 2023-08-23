@@ -49,7 +49,7 @@ class SIMTStack(implicit p: Parameters) extends Module {
   val out_diverge = RegInit(0.B)
   val out_data = Wire(new StackData())
   val diverge_status = RegInit(VecInit(Seq.fill(stackDepth)(false.B)))
-  val stack_sram = Module(new ReadWriteSmem(io.in_data.getWidth, stackDepth, addrWidth))
+  val stack_sram = Module(new ReadWriteSmem(io.in_data.getWidth, stackDepth))
 
   stack_pop_addr := stack_addr - 1.U
   stack_sram.io.enable := io.push || io.pop

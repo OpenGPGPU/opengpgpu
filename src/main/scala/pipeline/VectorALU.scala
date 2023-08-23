@@ -32,14 +32,14 @@ import freechips.rocketchip.rocket._
 class VectorALU(implicit p: Parameters) extends Module {
   val numThread = p(ThreadNum)
   val io = IO(new Bundle {
-    val in = Flipped(DecoupledIO(new ALUExeData()))
-    val out = DecoupledIO(new ALUData())
+    val in = Flipped(DecoupledIO(new ALUData()))
+    val out = DecoupledIO(new CommitData())
     val thread_mask_out = DecoupledIO(new ThreadMask())
   })
 
   val alu = VecInit(Seq.fill(numThread)((Module(new ScalarALU(new ALUFN))).io))
 
-  val result = Module(new Queue(new ALUData(), 1, pipe = true))
+  val result = Module(new Queue(new CommitData(), 1, pipe = true))
   val result2simt = Module(new Queue(new ThreadMask(), 1, pipe = true))
 
   for (x <- 0 until numThread) {
@@ -53,6 +53,10 @@ class VectorALU(implicit p: Parameters) extends Module {
 
   io.in.ready := result.io.enq.ready && result2simt.io.enq.ready
   result.io.enq.valid := io.in.valid
+  result.io.enq.bits.wid := io.in.bits.wid
+  result.io.enq.bits.pc := io.in.bits.pc
+  result.io.enq.bits.rd := io.in.bits.rd
+  result.io.enq.bits.eop := 1.B
   result2simt.io.enq.valid := io.in.valid
 
   io.out <> result.io.deq

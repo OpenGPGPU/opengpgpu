@@ -28,14 +28,21 @@ import org.chipsalliance.cde.config.Parameters
 import opengpgpu.config._
 import freechips.rocketchip.rocket._
 
-class ALUExeData(implicit p: Parameters) extends Bundle {
+class ALUData(implicit p: Parameters) extends Bundle {
   val numThreads = p(ThreadNum)
+  val numWarps = p(WarpNum)
   val xLen = p(XLen)
+  val addrWidth = p(AddrWidth)
+  val regIDWidth = p(RegIDWidth)
   val aluFn = new ALUFN
+
   val op1 = Vec(numThreads, UInt(xLen.W))
   val op2 = Vec(numThreads, UInt(xLen.W))
   val func = UInt(aluFn.SZ_ALU_FN.W)
   val mask = Vec(numThreads, Bool())
+  val wid = UInt(log2Ceil(numWarps).W)
+  val pc = UInt(addrWidth.W)
+  val rd = UInt(regIDWidth.W)
 }
 
 class LSUData(implicit p: Parameters) extends Bundle {
@@ -49,12 +56,12 @@ class LSUData(implicit p: Parameters) extends Bundle {
   val addr = Vec(numThreads, UInt(addrWidth.W))
   val data = Vec(numThreads, UInt(xLen.W))
   val mask = Vec(numThreads, Bool())
-  val func = UInt(aluFn.SZ_ALU_FN.W)
+  val func = UInt(1.W)
   val wid = UInt(log2Ceil(numWarps).W)
 
   val pc = UInt(addrWidth.W)
-  val fence = Bool()
-  val offsset = UInt(xLen.W)
+  // val fence = Bool()
+  val offset = UInt(xLen.W)
   val rd = UInt(regIDWidth.W)
 }
 
@@ -95,6 +102,9 @@ class InstData(implicit p: Parameters) extends Bundle {
 
 object ExType {
   val SZ_EX_TYPE = 3
+  val ALU = 0.U
+  val LSU = 1.U
+  val CSR = 2.U
 }
 
 class DecodeData(implicit p: Parameters) extends Bundle {
@@ -130,22 +140,22 @@ class WarpControlData(implicit p: Parameters) extends Bundle {
   val stall = Bool()
 }
 
-class IBufferData(implicit p: Parameters) extends Bundle {
-  val numThreads = p(ThreadNum)
-  val xLen = p(XLen)
-  val addrWidth = p(AddrWidth)
-  val numWarps = p(WarpNum)
-  val regIDWidth = p(RegIDWidth)
-
-  val wid = UInt(log2Ceil(numWarps).W)
-  val mask = Vec(numThreads, Bool())
-  val writeback = Bool()
-  val pc = UInt(addrWidth.W)
-  val rd = UInt(regIDWidth.W)
-  val rs1 = UInt(regIDWidth.W)
-  val rs2 = UInt(regIDWidth.W)
-  val rs3 = UInt(regIDWidth.W)
-}
+// class IBufferData(implicit p: Parameters) extends Bundle {
+//   val numThreads = p(ThreadNum)
+//   val xLen = p(XLen)
+//   val addrWidth = p(AddrWidth)
+//   val numWarps = p(WarpNum)
+//   val regIDWidth = p(RegIDWidth)
+//
+//   val wid = UInt(log2Ceil(numWarps).W)
+//   val mask = Vec(numThreads, Bool())
+//   val writeback = Bool()
+//   val pc = UInt(addrWidth.W)
+//   val rd = UInt(regIDWidth.W)
+//   val rs1 = UInt(regIDWidth.W)
+//   val rs2 = UInt(regIDWidth.W)
+//   val rs3 = UInt(regIDWidth.W)
+// }
 
 class WritebackData(implicit p: Parameters) extends Bundle {
   val numThreads = p(ThreadNum)
@@ -162,12 +172,21 @@ class WritebackData(implicit p: Parameters) extends Bundle {
   val data = Vec(numThreads, UInt(xLen.W))
 }
 
-class ALUData(implicit p: Parameters) extends Bundle {
+class ReadGPRReq(implicit p: Parameters) extends Bundle {
+  val numWarps = p(WarpNum)
+  val regIDWidth = p(RegIDWidth)
+
+  val wid = UInt(log2Ceil(numWarps).W)
+  val rs1 = UInt(regIDWidth.W)
+  val rs2 = UInt(regIDWidth.W)
+}
+
+class ReadGPRRsp(implicit p: Parameters) extends Bundle {
   val numThreads = p(ThreadNum)
   val xLen = p(XLen)
 
-  val data = Vec(numThreads, UInt(xLen.W))
-  val mask = Vec(numThreads, Bool())
+  val rs1_data = Vec(numThreads, UInt(xLen.W))
+  val rs2_data = Vec(numThreads, UInt(xLen.W))
 }
 
 class ThreadMask(implicit p: Parameters) extends Bundle {
