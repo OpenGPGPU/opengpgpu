@@ -20,7 +20,7 @@ class ScoreBoardTest extends AnyFlatSpec with ChiselScalatestTester {
       c.clock.step(3)
       // Test case 1: Reserve a register
       c.io.ibuffer.valid.poke(1.B)
-      c.io.ibuffer.bits.writeback.poke(1.B)
+      c.io.ibuffer.bits.wb.poke(1.B)
       c.io.ibuffer.bits.wid.poke(4.U)
       c.io.ibuffer.bits.rd.poke(5.U)
       c.io.ibuffer.ready.expect(1.B)
@@ -30,7 +30,7 @@ class ScoreBoardTest extends AnyFlatSpec with ChiselScalatestTester {
 
       // Test case 2: Reserve the same register
       c.io.ibuffer.valid.poke(1.B)
-      c.io.ibuffer.bits.writeback.poke(1.B)
+      c.io.ibuffer.bits.wb.poke(1.B)
       c.io.ibuffer.bits.wid.poke(4.U)
       c.io.ibuffer.bits.rd.poke(5.U)
       

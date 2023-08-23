@@ -39,39 +39,7 @@ import GPUInstructions._
 class GPUDecode(aluFn: ALUFN = ALUFN())(implicit val p: Parameters) extends DecodeConstants {
   val table: Array[(BitPat, List[BitPat])] = Array(
     JOIN -> List(
-      Y,
-      N,
-      N,
-      N,
-      Y,
-      N,
-      N,
-      N,
-      N,
-      N,
-      N,
-      N,
-      A2_SIZE,
-      A1_PC,
-      IMM_UJ,
-      DW_XPR,
-      aluFn.FN_ADD,
-      N,
-      M_X,
-      N,
-      N,
-      N,
-      N,
-      N,
-      N,
-      N,
-      CSR.N,
-      N,
-      N,
-      N,
-      N
-    )
-  )
+      Y,N,N,N,Y,N,N,N,N,N,N,N,A2_SIZE,A1_PC,IMM_UJ,DW_XPR,aluFn.FN_ADD,N,M_X,N,N,N,N,N,N,N,CSR.N,N,N,N,N))
 }
 
 // reuse rocketchip decode
