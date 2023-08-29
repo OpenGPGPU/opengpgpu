@@ -52,7 +52,7 @@ class Issue(implicit p: Parameters) extends Module {
   val score_board = Module(new ScoreBoard())
   val dispatch = Module(new Dispatch())
 
-  io.decode.ready := score_board.io.ibuffer.ready && dispatch.io.ibuffer.ready
+  io.decode.ready := score_board.io.ibuffer.ready && dispatch.io.ibuffer.ready && !decode_valid_n
 
   gpr.io.writeback.bits := io.writeback.bits
   gpr.io.writeback.valid := io.writeback.valid
