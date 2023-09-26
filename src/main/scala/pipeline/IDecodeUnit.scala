@@ -102,5 +102,5 @@ class IDecodeUnit(implicit p: Parameters) extends Module() {
 
   io.wcontrol.bits.wid := inst_reg.wid
   io.wcontrol.bits.join := is_join
-  io.wcontrol.bits.stall := is_branch || is_jal || is_jalr
+  io.wcontrol.bits.active := !(is_branch || is_jal || is_jalr)
 }
