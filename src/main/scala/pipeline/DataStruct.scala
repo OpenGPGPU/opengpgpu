@@ -136,26 +136,41 @@ class WarpControlData(implicit p: Parameters) extends Bundle {
   val numWarps = p(WarpNum)
 
   val wid = UInt(log2Ceil(numWarps).W)
+  val active = Bool()
   val join = Bool()
-  val stall = Bool()
 }
 
-// class IBufferData(implicit p: Parameters) extends Bundle {
-//   val numThreads = p(ThreadNum)
-//   val xLen = p(XLen)
-//   val addrWidth = p(AddrWidth)
-//   val numWarps = p(WarpNum)
-//   val regIDWidth = p(RegIDWidth)
-//
-//   val wid = UInt(log2Ceil(numWarps).W)
-//   val mask = Vec(numThreads, Bool())
-//   val writeback = Bool()
-//   val pc = UInt(addrWidth.W)
-//   val rd = UInt(regIDWidth.W)
-//   val rs1 = UInt(regIDWidth.W)
-//   val rs2 = UInt(regIDWidth.W)
-//   val rs3 = UInt(regIDWidth.W)
-// }
+class InstFetchData(implicit p: Parameters) extends Bundle {
+  val numThreads = p(ThreadNum)
+  val addrWidth = p(AddrWidth)
+  val numWarps = p(WarpNum)
+
+  val mask = Vec(numThreads, Bool())
+  val wid = UInt(log2Ceil(numWarps).W)
+  val pc = UInt(addrWidth.W)
+}
+
+class WarpCommandData(implicit p: Parameters) extends Bundle {
+  val numThreads = p(ThreadNum)
+  val addrWidth = p(AddrWidth)
+  val numWarps = p(WarpNum)
+
+  val mask = Vec(numThreads, Bool())
+  val wid = UInt(log2Ceil(numWarps).W)
+  val pc = UInt(addrWidth.W)
+}
+
+class BranchControlData(implicit p: Parameters) extends Bundle {
+  val numThreads = p(ThreadNum)
+  val addrWidth = p(AddrWidth)
+  val numWarps = p(WarpNum)
+
+  val mask = Vec(numThreads, Bool())
+  val wid = UInt(log2Ceil(numWarps).W)
+  val pc = UInt(addrWidth.W)
+  val data = new StackData()
+  val diverge = Bool()
+}
 
 class WritebackData(implicit p: Parameters) extends Bundle {
   val numThreads = p(ThreadNum)
