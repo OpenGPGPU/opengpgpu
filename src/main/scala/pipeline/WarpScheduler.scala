@@ -17,6 +17,7 @@ class WarpScheduler(implicit p: Parameters) extends Module {
     val warp_cmd = Flipped(DecoupledIO(new WarpCommandData()))
     val warp_ctl = Flipped(DecoupledIO(new WarpControlData()))
     val branch_ctl = Flipped(DecoupledIO(new BranchControlData()))
+    val end_ctl = Flipped(DecoupledIO(new EndControlData()))
     val inst_fetch = DecoupledIO(new InstFetchData())
   })
 
@@ -29,6 +30,7 @@ class WarpScheduler(implicit p: Parameters) extends Module {
   io.warp_cmd.ready := warp_idle.asUInt.orR
   io.warp_ctl.ready := true.B
   io.branch_ctl.ready := true.B
+  io.end_ctl.ready := true.B
 
   val has_idle = warp_idle.asUInt.orR
   val has_active = warp_active.asUInt.orR
@@ -58,6 +60,8 @@ class WarpScheduler(implicit p: Parameters) extends Module {
     warp_active(idle_id) := 1.B
     warp_pc(idle_id) := io.warp_cmd.bits.pc
     warp_tmask(idle_id) := io.warp_cmd.bits.mask
+  }.elsewhen(io.end_ctl.fire) {
+    warp_idle(io.end_ctl.bits.wid) := 1.B
   }
 
   when(io.warp_ctl.valid) {
@@ -67,11 +71,17 @@ class WarpScheduler(implicit p: Parameters) extends Module {
   when(io.branch_ctl.valid) {
     warp_pc(io.branch_ctl.bits.wid) := io.branch_ctl.bits.pc
     warp_active(io.branch_ctl.bits.wid) := 1.B
+    warp_tmask(io.branch_ctl.bits.wid) := io.branch_ctl.bits.mask
   }
 
-  when(pop_valid && pop_diverge) {
-    warp_pc(pop_wid) := pop_data.pc
-    warp_tmask(pop_wid) := pop_data.mask
+  when(pop_valid) {
+    warp_active(pop_wid) := 1.B
+    when(pop_diverge) {
+      warp_pc(pop_wid) := pop_data.pc
+      warp_tmask(pop_wid) := pop_data.mask
+    }.otherwise {
+      warp_tmask(pop_wid) := pop_data.orig_mask
+    }
   }
 
   when(io.inst_fetch.fire) {
