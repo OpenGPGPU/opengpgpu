@@ -160,6 +160,14 @@ class WarpCommandData(implicit p: Parameters) extends Bundle {
   val pc = UInt(addrWidth.W)
 }
 
+class EndControlData(implicit p: Parameters) extends Bundle {
+  val numThreads = p(ThreadNum)
+  val addrWidth = p(AddrWidth)
+  val numWarps = p(WarpNum)
+
+  val wid = UInt(log2Ceil(numWarps).W)
+}
+
 class BranchControlData(implicit p: Parameters) extends Bundle {
   val numThreads = p(ThreadNum)
   val addrWidth = p(AddrWidth)
