@@ -14,7 +14,7 @@ class WarpSchedulerTest extends AnyFlatSpec with ChiselScalatestTester {
   it should "perform warp scheduler operations correctly" in {
     implicit val p = (new CoreConfig).alter((site, here, up) => {case WarpNum => 2})
     test(new WarpScheduler()).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      // 设置输入信号
+
       dut.io.warp_cmd.valid.poke(true.B)
       dut.io.warp_cmd.bits.pc.poke(0x100.U)
       dut.io.warp_cmd.bits.mask(0).poke(1.B)
