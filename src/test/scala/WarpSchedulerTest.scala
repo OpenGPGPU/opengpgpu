@@ -32,6 +32,7 @@ class WarpSchedulerTest extends AnyFlatSpec with ChiselScalatestTester {
 
       // warp is stalled after inst fetch
       dut.clock.step()
+      
       dut.io.inst_fetch.valid.expect(0.B)
 
       // warp ctl restart a warp
