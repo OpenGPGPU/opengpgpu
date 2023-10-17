@@ -28,6 +28,67 @@ import opengpgpu.config._
 import freechips.rocketchip.rocket._
 import freechips.rocketchip.util._
 
+import Instructions._
+
+class MyIDecode(implicit val p: Parameters) extends DecodeConstants {
+  // format: off
+  val aluFn = p(ALUFunc)
+  val table: Array[(BitPat, List[BitPat])] = Array(
+    BNE->       List(Y,N,N,Y,N,N,Y,Y,N,N,N,N,A2_RS2, A1_RS1, IMM_SB,DW_XPR,aluFn.FN_SNE,   N,M_X,        N,N,N,N,N,N,N,CSR.N,N,N,N,N),
+    BEQ->       List(Y,N,N,Y,N,N,Y,Y,N,N,N,N,A2_RS2, A1_RS1, IMM_SB,DW_XPR,aluFn.FN_SEQ,   N,M_X,        N,N,N,N,N,N,N,CSR.N,N,N,N,N),
+    BLT->       List(Y,N,N,Y,N,N,Y,Y,N,N,N,N,A2_RS2, A1_RS1, IMM_SB,DW_XPR,aluFn.FN_SLT,   N,M_X,        N,N,N,N,N,N,N,CSR.N,N,N,N,N),
+    BLTU->      List(Y,N,N,Y,N,N,Y,Y,N,N,N,N,A2_RS2, A1_RS1, IMM_SB,DW_XPR,aluFn.FN_SLTU,  N,M_X,        N,N,N,N,N,N,N,CSR.N,N,N,N,N),
+    BGE->       List(Y,N,N,Y,N,N,Y,Y,N,N,N,N,A2_RS2, A1_RS1, IMM_SB,DW_XPR,aluFn.FN_SGE,   N,M_X,        N,N,N,N,N,N,N,CSR.N,N,N,N,N),
+    BGEU->      List(Y,N,N,Y,N,N,Y,Y,N,N,N,N,A2_RS2, A1_RS1, IMM_SB,DW_XPR,aluFn.FN_SGEU,  N,M_X,        N,N,N,N,N,N,N,CSR.N,N,N,N,N),
+
+    // modify jalr decoder, alu has nothing to do with pc
+    JAL->       List(Y,N,N,N,Y,N,N,N,N,N,N,N,A2_SIZE,A1_PC,  IMM_UJ,DW_XPR,aluFn.FN_ADD,   N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    JALR->      List(Y,N,N,N,N,Y,N,Y,N,N,N,N,A2_SIZE,A1_PC,  IMM_UJ,DW_XPR,aluFn.FN_ADD,   N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    AUIPC->     List(Y,N,N,N,N,N,N,N,N,N,N,N,A2_IMM, A1_PC,  IMM_U, DW_XPR,aluFn.FN_ADD,   N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+
+    LB->        List(Y,N,N,N,N,N,N,Y,N,N,N,N,A2_IMM, A1_RS1, IMM_I, DW_XPR,aluFn.FN_ADD,   Y,M_XRD,      N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    LH->        List(Y,N,N,N,N,N,N,Y,N,N,N,N,A2_IMM, A1_RS1, IMM_I, DW_XPR,aluFn.FN_ADD,   Y,M_XRD,      N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    LW->        List(Y,N,N,N,N,N,N,Y,N,N,N,N,A2_IMM, A1_RS1, IMM_I, DW_XPR,aluFn.FN_ADD,   Y,M_XRD,      N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    LBU->       List(Y,N,N,N,N,N,N,Y,N,N,N,N,A2_IMM, A1_RS1, IMM_I, DW_XPR,aluFn.FN_ADD,   Y,M_XRD,      N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    LHU->       List(Y,N,N,N,N,N,N,Y,N,N,N,N,A2_IMM, A1_RS1, IMM_I, DW_XPR,aluFn.FN_ADD,   Y,M_XRD,      N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    SB->        List(Y,N,N,N,N,N,Y,Y,N,N,N,N,A2_IMM, A1_RS1, IMM_S, DW_XPR,aluFn.FN_ADD,   Y,M_XWR,      N,N,N,N,N,N,N,CSR.N,N,N,N,N),
+    SH->        List(Y,N,N,N,N,N,Y,Y,N,N,N,N,A2_IMM, A1_RS1, IMM_S, DW_XPR,aluFn.FN_ADD,   Y,M_XWR,      N,N,N,N,N,N,N,CSR.N,N,N,N,N),
+    SW->        List(Y,N,N,N,N,N,Y,Y,N,N,N,N,A2_IMM, A1_RS1, IMM_S, DW_XPR,aluFn.FN_ADD,   Y,M_XWR,      N,N,N,N,N,N,N,CSR.N,N,N,N,N),
+
+    LUI->       List(Y,N,N,N,N,N,N,N,N,N,N,N,A2_IMM, A1_ZERO,IMM_U, DW_XPR,aluFn.FN_ADD,   N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    ADDI->      List(Y,N,N,N,N,N,N,Y,N,N,N,N,A2_IMM, A1_RS1, IMM_I, DW_XPR,aluFn.FN_ADD,   N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    SLTI ->     List(Y,N,N,N,N,N,N,Y,N,N,N,N,A2_IMM, A1_RS1, IMM_I, DW_XPR,aluFn.FN_SLT,   N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    SLTIU->     List(Y,N,N,N,N,N,N,Y,N,N,N,N,A2_IMM, A1_RS1, IMM_I, DW_XPR,aluFn.FN_SLTU,  N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    ANDI->      List(Y,N,N,N,N,N,N,Y,N,N,N,N,A2_IMM, A1_RS1, IMM_I, DW_XPR,aluFn.FN_AND,   N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    ORI->       List(Y,N,N,N,N,N,N,Y,N,N,N,N,A2_IMM, A1_RS1, IMM_I, DW_XPR,aluFn.FN_OR,    N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    XORI->      List(Y,N,N,N,N,N,N,Y,N,N,N,N,A2_IMM, A1_RS1, IMM_I, DW_XPR,aluFn.FN_XOR,   N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    ADD->       List(Y,N,N,N,N,N,Y,Y,N,N,N,N,A2_RS2, A1_RS1, IMM_X, DW_XPR,aluFn.FN_ADD,   N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    SUB->       List(Y,N,N,N,N,N,Y,Y,N,N,N,N,A2_RS2, A1_RS1, IMM_X, DW_XPR,aluFn.FN_SUB,   N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    SLT->       List(Y,N,N,N,N,N,Y,Y,N,N,N,N,A2_RS2, A1_RS1, IMM_X, DW_XPR,aluFn.FN_SLT,   N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    SLTU->      List(Y,N,N,N,N,N,Y,Y,N,N,N,N,A2_RS2, A1_RS1, IMM_X, DW_XPR,aluFn.FN_SLTU,  N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    AND->       List(Y,N,N,N,N,N,Y,Y,N,N,N,N,A2_RS2, A1_RS1, IMM_X, DW_XPR,aluFn.FN_AND,   N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    OR->        List(Y,N,N,N,N,N,Y,Y,N,N,N,N,A2_RS2, A1_RS1, IMM_X, DW_XPR,aluFn.FN_OR,    N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    XOR->       List(Y,N,N,N,N,N,Y,Y,N,N,N,N,A2_RS2, A1_RS1, IMM_X, DW_XPR,aluFn.FN_XOR,   N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    SLL->       List(Y,N,N,N,N,N,Y,Y,N,N,N,N,A2_RS2, A1_RS1, IMM_X, DW_XPR,aluFn.FN_SL,    N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    SRL->       List(Y,N,N,N,N,N,Y,Y,N,N,N,N,A2_RS2, A1_RS1, IMM_X, DW_XPR,aluFn.FN_SR,    N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+    SRA->       List(Y,N,N,N,N,N,Y,Y,N,N,N,N,A2_RS2, A1_RS1, IMM_X, DW_XPR,aluFn.FN_SRA,   N,M_X,        N,N,N,N,N,N,Y,CSR.N,N,N,N,N),
+
+    FENCE->     List(Y,N,N,N,N,N,N,N,N,N,N,N,A2_X,   A1_X,   IMM_X, DW_X,  aluFn.FN_X,     N,M_X,        N,N,N,N,N,N,N,CSR.N,N,Y,N,N),
+
+    ECALL->     List(Y,N,N,N,N,N,N,X,N,N,N,N,A2_X,   A1_X,   IMM_X, DW_X,  aluFn.FN_X,     N,M_X,        N,N,N,N,N,N,N,CSR.I,N,N,N,N),
+    EBREAK->    List(Y,N,N,N,N,N,N,X,N,N,N,N,A2_X,   A1_X,   IMM_X, DW_X,  aluFn.FN_X,     N,M_X,        N,N,N,N,N,N,N,CSR.I,N,N,N,N),
+    MRET->      List(Y,N,N,N,N,N,N,X,N,N,N,N,A2_X,   A1_X,   IMM_X, DW_X,  aluFn.FN_X,     N,M_X,        N,N,N,N,N,N,N,CSR.I,N,N,N,N),
+    WFI->       List(Y,N,N,N,N,N,N,X,N,N,N,N,A2_X,   A1_X,   IMM_X, DW_X,  aluFn.FN_X,     N,M_X,        N,N,N,N,N,N,N,CSR.I,N,N,N,N),
+    CSRRW->     List(Y,N,N,N,N,N,N,Y,N,N,N,N,A2_ZERO,A1_RS1, IMM_X, DW_XPR,aluFn.FN_ADD,   N,M_X,        N,N,N,N,N,N,Y,CSR.W,N,N,N,N),
+    CSRRS->     List(Y,N,N,N,N,N,N,Y,N,N,N,N,A2_ZERO,A1_RS1, IMM_X, DW_XPR,aluFn.FN_ADD,   N,M_X,        N,N,N,N,N,N,Y,CSR.S,N,N,N,N),
+    CSRRC->     List(Y,N,N,N,N,N,N,Y,N,N,N,N,A2_ZERO,A1_RS1, IMM_X, DW_XPR,aluFn.FN_ADD,   N,M_X,        N,N,N,N,N,N,Y,CSR.C,N,N,N,N),
+    CSRRWI->    List(Y,N,N,N,N,N,N,N,N,N,N,N,A2_IMM, A1_ZERO,IMM_Z, DW_XPR,aluFn.FN_ADD,   N,M_X,        N,N,N,N,N,N,Y,CSR.W,N,N,N,N),
+    CSRRSI->    List(Y,N,N,N,N,N,N,N,N,N,N,N,A2_IMM, A1_ZERO,IMM_Z, DW_XPR,aluFn.FN_ADD,   N,M_X,        N,N,N,N,N,N,Y,CSR.S,N,N,N,N),
+    CSRRCI->    List(Y,N,N,N,N,N,N,N,N,N,N,N,A2_IMM, A1_ZERO,IMM_Z, DW_XPR,aluFn.FN_ADD,   N,M_X,        N,N,N,N,N,N,Y,CSR.C,N,N,N,N))
+  // format: off
+}
+
+
 // add join inst based on jal, use wxd to distinguish
 /* Automatically generated by parse_opcodes */
 object GPUInstructions {
@@ -36,7 +97,8 @@ object GPUInstructions {
 }
 
 import GPUInstructions._
-class GPUDecode(aluFn: ALUFN = ALUFN())(implicit val p: Parameters) extends DecodeConstants {
+class GPUDecode(implicit val p: Parameters) extends DecodeConstants {
+  val aluFn = p(ALUFunc)
   val table: Array[(BitPat, List[BitPat])] = Array(
     // format: off
     JOIN -> List(
@@ -52,9 +114,10 @@ class IDecodeUnit(implicit p: Parameters) extends Module() {
     val wcontrol = DecoupledIO(new WarpControlData())
   })
 
-  val aluFn = new ALUFN
+  val aluFn = p(ALUFunc)
   val decode_table = {
-    Seq(new IDecode(aluFn))
+    Seq(new GPUDecode()) ++:
+      Seq(new MyIDecode())
   } flatMap (_.table)
   val id_ctrl = Wire(new IntCtrlSigs(aluFn)).decode(io.inst.bits.data, decode_table)
   val exec_ctrl = RegInit(0.U.asTypeOf(new IntCtrlSigs(aluFn)))
@@ -92,8 +155,8 @@ class IDecodeUnit(implicit p: Parameters) extends Module() {
   io.decode.bits.func := ctrl.alu_fn
   io.decode.bits.mem_cmd := ctrl.mem_cmd(0)
   io.decode.bits.wb := ctrl.wxd
-  io.decode.bits.use_imm := ctrl.sel_alu2 === A2_IMM
-  io.decode.bits.use_pc := ctrl.sel_alu1 === A1_PC
+  io.decode.bits.sel_alu2 := ctrl.sel_alu2.asUInt
+  io.decode.bits.sel_alu1 := ctrl.sel_alu1.asUInt
   io.decode.bits.imm := imm.asUInt
   io.decode.bits.branch := Cat(is_jal, is_jalr, is_join, is_branch)
   io.decode.bits.rd := inst_reg.data(11, 7)

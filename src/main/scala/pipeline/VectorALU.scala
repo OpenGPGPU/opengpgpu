@@ -34,33 +34,41 @@ class VectorALU(implicit p: Parameters) extends Module {
   val io = IO(new Bundle {
     val in = Flipped(DecoupledIO(new ALUData()))
     val out = DecoupledIO(new CommitData())
-    val thread_mask_out = DecoupledIO(new ThreadMask())
+    val branch_ctl = DecoupledIO(new BranchData())
   })
 
-  val alu = VecInit(Seq.fill(numThread)((Module(new ScalarALU(new ALUFN))).io))
+  val alu = VecInit(Seq.fill(numThread)((Module(new ScalarALU()).io)))
 
   val result = Module(new Queue(new CommitData(), 1, pipe = true))
-  val result2simt = Module(new Queue(new ThreadMask(), 1, pipe = true))
+  val branch_result = Module(new Queue(new BranchData(), 1, pipe = true))
 
   for (x <- 0 until numThread) {
-    alu(x).op1 := io.in.bits.op1(x)
-    alu(x).op2 := io.in.bits.op2(x)
-    alu(x).func := io.in.bits.func
+    alu(x).in1 := io.in.bits.op1(x)
+    alu(x).in2 := io.in.bits.op2(x)
+    alu(x).fn := io.in.bits.func
     result.io.enq.bits.data(x) := alu(x).out
     result.io.enq.bits.mask(x) := io.in.bits.mask(x)
-    result2simt.io.enq.bits.mask(x) := io.in.bits.mask(x) && alu(x).cmp_out
+    branch_result.io.enq.bits.mask(x) := alu(x).cmp_out
   }
 
-  io.in.ready := result.io.enq.ready && result2simt.io.enq.ready
+  branch_result.io.enq.bits.branch := io.in.bits.branch
+  branch_result.io.enq.bits.wid := io.in.bits.wid
+  branch_result.io.enq.bits.pc := io.in.bits.pc
+  branch_result.io.enq.bits.orig_mask := io.in.bits.mask
+  branch_result.io.enq.bits.imm := io.in.bits.imm
+  branch_result.io.enq.bits.rs1_data := io.in.bits.rs1_data
+
+  io.in.ready := result.io.enq.ready && branch_result.io.enq.ready
+
   result.io.enq.valid := io.in.valid
   result.io.enq.bits.wid := io.in.bits.wid
   result.io.enq.bits.pc := io.in.bits.pc
   result.io.enq.bits.rd := io.in.bits.rd
   result.io.enq.bits.eop := 1.B
-  result2simt.io.enq.valid := io.in.valid
+  branch_result.io.enq.valid := io.in.valid
 
   io.out <> result.io.deq
-  io.thread_mask_out <> result2simt.io.deq
+  io.branch_ctl <> branch_result.io.deq
 }
 
 object VectorALURTL extends App {

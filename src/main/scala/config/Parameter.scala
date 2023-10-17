@@ -25,6 +25,7 @@ package opengpgpu.config
 import chisel3.util._
 import org.chipsalliance.cde.config._
 import freechips.rocketchip.subsystem.{MemoryBusParams, SystemBusParams}
+import freechips.rocketchip.rocket._
 
 /** Specifies the size and width of external memory ports */
 case class MasterPortParams(
@@ -53,6 +54,7 @@ case object CacheBlockBytes extends Field[Int](64)
 case object ExtMem extends Field[Option[MemoryPortParams]](None)
 case object MemoryBusKey extends Field[MemoryBusParams]
 case object SystemBusKey extends Field[SystemBusParams]
+case object ALUFunc extends Field[ABLUFN]
 
 class CoreConfig
     extends Config((site, here, up) => {
@@ -67,7 +69,7 @@ class CoreConfig
       case CacheBlockBytes => 4
       case MemoryBusKey    => MemoryBusParams(beatBytes = site(XLen) / 8, blockBytes = site(CacheBlockBytes))
       case SystemBusKey    => SystemBusParams(beatBytes = site(XLen) / 8, blockBytes = site(CacheBlockBytes))
-
+      case ALUFunc         => new ABLUFN
       case ExtMem =>
         Some(
           MemoryPortParams(

@@ -34,7 +34,7 @@ class ALUData(implicit p: Parameters) extends Bundle {
   val xLen = p(XLen)
   val addrWidth = p(AddrWidth)
   val regIDWidth = p(RegIDWidth)
-  val aluFn = new ALUFN
+  val aluFn = p(ALUFunc)
 
   val op1 = Vec(numThreads, UInt(xLen.W))
   val op2 = Vec(numThreads, UInt(xLen.W))
@@ -43,6 +43,24 @@ class ALUData(implicit p: Parameters) extends Bundle {
   val wid = UInt(log2Ceil(numWarps).W)
   val pc = UInt(addrWidth.W)
   val rd = UInt(regIDWidth.W)
+  val branch = UInt(4.W)
+  val imm = UInt(xLen.W)
+  val rs1_data = Vec(numThreads, UInt(xLen.W))
+}
+
+class BranchData(implicit p: Parameters) extends Bundle {
+  val numThreads = p(ThreadNum)
+  val numWarps = p(WarpNum)
+  val addrWidth = p(AddrWidth)
+  val xLen = p(XLen)
+
+  val branch = UInt(4.W)
+  val mask = Vec(numThreads, Bool())
+  val orig_mask = Vec(numThreads, Bool())
+  val wid = UInt(log2Ceil(numWarps).W)
+  val pc = UInt(addrWidth.W)
+  val imm = UInt(xLen.W)
+  val rs1_data = Vec(numThreads, UInt(xLen.W))
 }
 
 class LSUData(implicit p: Parameters) extends Bundle {
@@ -51,7 +69,7 @@ class LSUData(implicit p: Parameters) extends Bundle {
   val addrWidth = p(AddrWidth)
   val numWarps = p(WarpNum)
   val regIDWidth = p(RegIDWidth)
-  val aluFn = new ALUFN
+  val aluFn = p(ALUFunc)
 
   val addr = Vec(numThreads, UInt(addrWidth.W))
   val data = Vec(numThreads, UInt(xLen.W))
@@ -113,14 +131,14 @@ class DecodeData(implicit p: Parameters) extends Bundle {
   val addrWidth = p(AddrWidth)
   val numWarps = p(WarpNum)
   val regIDWidth = p(RegIDWidth)
-  val aluFn = new ALUFN
+  val aluFn = p(ALUFunc)
 
   val wid = UInt(log2Ceil(numWarps).W)
   val mask = Vec(numThreads, Bool())
   val wb = Bool()
   val imm = UInt(xLen.W)
-  val use_pc = Bool()
-  val use_imm = Bool()
+  val sel_alu1 = UInt(A1_X.getWidth.W)
+  val sel_alu2 = UInt(A2_X.getWidth.W)
   // onehot
   val ex_type = UInt(ExType.SZ_EX_TYPE.W)
   val func = UInt(aluFn.SZ_ALU_FN.W)
