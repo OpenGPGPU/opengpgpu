@@ -16,7 +16,7 @@ class BranchUnitTest extends AnyFlatSpec with ChiselScalatestTester {
   it should "pass the branch control data" in {
     implicit val p = new CoreConfig
     val aluFn = p(ALUFunc)
-    test(new BranchUnit).withAnnotations(Seq(VerilatorBackendAnnotation)) { c =>
+    test(new BranchUnit) { c =>
       c.io.branch_data.valid.poke(true.B)
       c.io.branch_data.bits.pc.poke(0.U)
       c.io.branch_data.bits.imm.poke(4.U)
