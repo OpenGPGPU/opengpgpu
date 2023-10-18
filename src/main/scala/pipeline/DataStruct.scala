@@ -28,13 +28,19 @@ import org.chipsalliance.cde.config.Parameters
 import opengpgpu.config._
 import freechips.rocketchip.rocket._
 
+class BranchSignal(implicit p: Parameters) extends Bundle {
+  val jal = Bool()
+  val jalr = Bool()
+  val branch = Bool()
+}
+
 class ALUData(implicit p: Parameters) extends Bundle {
   val numThreads = p(ThreadNum)
   val numWarps = p(WarpNum)
   val xLen = p(XLen)
   val addrWidth = p(AddrWidth)
   val regIDWidth = p(RegIDWidth)
-  val aluFn = new ALUFN
+  val aluFn = p(ALUFunc)
 
   val op1 = Vec(numThreads, UInt(xLen.W))
   val op2 = Vec(numThreads, UInt(xLen.W))
@@ -43,6 +49,24 @@ class ALUData(implicit p: Parameters) extends Bundle {
   val wid = UInt(log2Ceil(numWarps).W)
   val pc = UInt(addrWidth.W)
   val rd = UInt(regIDWidth.W)
+  val branch = new BranchSignal()
+  val imm = UInt(xLen.W)
+  val rs1_data = UInt(xLen.W)
+}
+
+class BranchData(implicit p: Parameters) extends Bundle {
+  val numThreads = p(ThreadNum)
+  val numWarps = p(WarpNum)
+  val addrWidth = p(AddrWidth)
+  val xLen = p(XLen)
+
+  val branch = new BranchSignal()
+  val mask = Vec(numThreads, Bool())
+  val orig_mask = Vec(numThreads, Bool())
+  val wid = UInt(log2Ceil(numWarps).W)
+  val pc = UInt(addrWidth.W)
+  val imm = UInt(xLen.W)
+  val rs1_data = UInt(xLen.W)
 }
 
 class LSUData(implicit p: Parameters) extends Bundle {
@@ -51,7 +75,7 @@ class LSUData(implicit p: Parameters) extends Bundle {
   val addrWidth = p(AddrWidth)
   val numWarps = p(WarpNum)
   val regIDWidth = p(RegIDWidth)
-  val aluFn = new ALUFN
+  val aluFn = p(ALUFunc)
 
   val addr = Vec(numThreads, UInt(addrWidth.W))
   val data = Vec(numThreads, UInt(xLen.W))
@@ -100,11 +124,9 @@ class InstData(implicit p: Parameters) extends Bundle {
   val data = UInt(32.W)
 }
 
-object ExType {
-  val SZ_EX_TYPE = 3
-  val ALU = 0.U
-  val LSU = 1.U
-  val CSR = 2.U
+class ExType(implicit p: Parameters) extends Bundle {
+  val lsu = Bool()
+  val alu = Bool()
 }
 
 class DecodeData(implicit p: Parameters) extends Bundle {
@@ -113,19 +135,19 @@ class DecodeData(implicit p: Parameters) extends Bundle {
   val addrWidth = p(AddrWidth)
   val numWarps = p(WarpNum)
   val regIDWidth = p(RegIDWidth)
-  val aluFn = new ALUFN
+  val aluFn = p(ALUFunc)
 
   val wid = UInt(log2Ceil(numWarps).W)
   val mask = Vec(numThreads, Bool())
   val wb = Bool()
   val imm = UInt(xLen.W)
-  val use_pc = Bool()
-  val use_imm = Bool()
+  val sel_alu1 = UInt(A1_X.getWidth.W)
+  val sel_alu2 = UInt(A2_X.getWidth.W)
   // onehot
-  val ex_type = UInt(ExType.SZ_EX_TYPE.W)
+  val ex_type = new ExType()
   val func = UInt(aluFn.SZ_ALU_FN.W)
   val mem_cmd = UInt(1.W)
-  val branch = UInt(4.W)
+  val branch = new BranchSignal()
   val pc = UInt(addrWidth.W)
   val rd = UInt(regIDWidth.W)
   val rs1 = UInt(regIDWidth.W)

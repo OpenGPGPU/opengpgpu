@@ -20,6 +20,8 @@ class IssueTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.lsu.ready.poke(1.U)
       dut.io.decode.bits.rd.poke(5.U)
       dut.io.decode.valid.poke(1.U)
+      dut.io.decode.bits.sel_alu1.poke(1.U)
+      dut.io.decode.bits.ex_type.alu.poke(1.B)
       dut.clock.step()
       dut.io.decode.valid.poke(0.U)
       dut.clock.step()

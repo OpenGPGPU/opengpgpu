@@ -15,7 +15,7 @@ class DispatchTest extends AnyFlatSpec with ChiselScalatestTester {
     implicit val p = new CoreConfig
     test(new Dispatch()) { dut =>
       dut.io.ibuffer.valid.poke(1.B)
-      dut.io.ibuffer.bits.ex_type.poke(ExType.ALU)
+      dut.io.ibuffer.bits.ex_type.alu.poke(1.B)
       dut.io.alu.ready.poke(1.B)
       dut.io.lsu.ready.poke(1.B)
       dut.clock.step(1)
