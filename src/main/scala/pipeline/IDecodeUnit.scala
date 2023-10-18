@@ -151,14 +151,18 @@ class IDecodeUnit(implicit p: Parameters) extends Module() {
   io.decode.bits.wid := inst_reg.wid
   io.decode.bits.mask := inst_reg.mask
   io.decode.bits.pc := inst_reg.pc
-  io.decode.bits.ex_type := Cat(is_csr, is_lsu, is_alu)
+  io.decode.bits.ex_type.lsu := is_lsu
+  io.decode.bits.ex_type.alu := is_alu
+
   io.decode.bits.func := ctrl.alu_fn
   io.decode.bits.mem_cmd := ctrl.mem_cmd(0)
   io.decode.bits.wb := ctrl.wxd
   io.decode.bits.sel_alu2 := ctrl.sel_alu2.asUInt
   io.decode.bits.sel_alu1 := ctrl.sel_alu1.asUInt
   io.decode.bits.imm := imm.asUInt
-  io.decode.bits.branch := Cat(is_jal, is_jalr, is_join, is_branch)
+  io.decode.bits.branch.jal := is_jal
+  io.decode.bits.branch.jalr := is_jalr
+  io.decode.bits.branch.branch := is_branch
   io.decode.bits.rd := inst_reg.data(11, 7)
   io.decode.bits.rs1 := inst_reg.data(19, 15)
   io.decode.bits.rs2 := inst_reg.data(24, 20)

@@ -26,7 +26,7 @@ class IDecodeUnitTest extends AnyFlatSpec with ChiselScalatestTester {
       decodeData.wid.expect(0.U)
       decodeData.mask(0).expect(0.B)
       decodeData.pc.expect(0.U)
-      decodeData.ex_type.expect(1.U)
+      decodeData.ex_type.alu.expect(1.U)
       decodeData.mem_cmd.expect(0.U)
       decodeData.imm.expect(2000.U)
       decodeData.wb.expect(1.U)
@@ -37,7 +37,7 @@ class IDecodeUnitTest extends AnyFlatSpec with ChiselScalatestTester {
       instData = 0x40140533
       dut.io.inst.bits.data.poke(instData.U)
       dut.clock.step()
-      decodeData.ex_type.expect(1.U)
+      decodeData.ex_type.alu.expect(1.U)
       //decodeData.func.expect(10.U)
       // decodeData.use_imm.expect(false.B)
       decodeData.wb.expect(1.U)
@@ -47,7 +47,7 @@ class IDecodeUnitTest extends AnyFlatSpec with ChiselScalatestTester {
       instData = 0x000007ef
       dut.io.inst.bits.data.poke(instData.U)
       dut.clock.step()
-      decodeData.ex_type.expect(1.U)
+      decodeData.ex_type.alu.expect(1.U)
       //decodeData.func.expect(0.U)
       // decodeData.use_imm.expect(false.B)
       decodeData.wb.expect(1.U)
@@ -57,7 +57,7 @@ class IDecodeUnitTest extends AnyFlatSpec with ChiselScalatestTester {
       instData = 0x0101a883
       dut.io.inst.bits.data.poke(instData.U)
       dut.clock.step()
-      decodeData.ex_type.expect(2.U)
+      decodeData.ex_type.lsu.expect(1.U)
       // decodeData.use_imm.expect(true.B)
 
     }

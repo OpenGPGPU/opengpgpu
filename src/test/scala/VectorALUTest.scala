@@ -22,7 +22,7 @@ class VectorALUTest extends AnyFlatSpec with ChiselScalatestTester {
       c.io.in.bits.func.poke(aluFn.FN_ADD)
       c.io.in.bits.mask.map(x => x.poke(1.B))
       c.io.out.ready.poke(1.U)
-      c.io.branch_ctl.ready.poke(1.U)
+      c.io.branch_data.ready.poke(1.U)
       c.clock.step()
       c.io.out.bits.data(0).expect(2.U)
       c.io.in.bits.mask(0).poke(0.B)

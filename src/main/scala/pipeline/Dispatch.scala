@@ -74,7 +74,7 @@ class Dispatch(implicit p: Parameters) extends Module {
     Seq(A2_RS2.asUInt -> buffer_deq.gpr_rsp.rs2_data, A2_IMM.asUInt -> imm_vec, A2_SIZE.asUInt -> const_vec)
   )
 
-  io.alu.valid := buffer.io.deq.valid && buffer_deq.decode.ex_type === ExType.ALU
+  io.alu.valid := buffer.io.deq.valid && buffer_deq.decode.ex_type.alu
   io.alu.bits.op1 := ex_op1
   io.alu.bits.op2 := ex_op2
   io.alu.bits.func := buffer_deq.decode.func
@@ -83,10 +83,10 @@ class Dispatch(implicit p: Parameters) extends Module {
   io.alu.bits.pc := buffer_deq.decode.pc
   io.alu.bits.rd := buffer_deq.decode.rd
   io.alu.bits.imm := buffer_deq.decode.imm
-  io.alu.bits.rs1_data := buffer_deq.gpr_rsp.rs1_data
+  io.alu.bits.rs1_data := buffer_deq.gpr_rsp.rs1_data(PriorityEncoder(buffer_deq.decode.mask))
   io.alu.bits.branch := buffer_deq.decode.branch
 
-  io.lsu.valid := buffer.io.deq.valid && buffer_deq.decode.ex_type === ExType.LSU
+  io.lsu.valid := buffer.io.deq.valid && buffer_deq.decode.ex_type.lsu
   io.lsu.bits.func := buffer_deq.decode.mem_cmd
   io.lsu.bits.wid := buffer_deq.decode.wid
   io.lsu.bits.mask := buffer_deq.decode.mask
@@ -96,7 +96,6 @@ class Dispatch(implicit p: Parameters) extends Module {
   io.lsu.bits.offset := buffer_deq.decode.imm
   io.lsu.bits.pc := buffer_deq.decode.pc
 
-  val mapping = Seq((0.U, io.alu.ready), (1.U, io.lsu.ready))
-
-  buffer.io.deq.ready := MuxLookup(buffer_deq.decode.ex_type, 1.B)(mapping)
+  val mapping = Seq((1.U, io.alu.ready), (2.U, io.lsu.ready))
+  buffer.io.deq.ready := MuxLookup(Cat(buffer_deq.decode.ex_type.lsu, buffer_deq.decode.ex_type.alu), 1.B)(mapping)
 }

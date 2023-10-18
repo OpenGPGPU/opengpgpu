@@ -34,7 +34,7 @@ class VectorALU(implicit p: Parameters) extends Module {
   val io = IO(new Bundle {
     val in = Flipped(DecoupledIO(new ALUData()))
     val out = DecoupledIO(new CommitData())
-    val branch_ctl = DecoupledIO(new BranchData())
+    val branch_data = DecoupledIO(new BranchData())
   })
 
   val alu = VecInit(Seq.fill(numThread)((Module(new ScalarALU()).io)))
@@ -48,7 +48,7 @@ class VectorALU(implicit p: Parameters) extends Module {
     alu(x).fn := io.in.bits.func
     result.io.enq.bits.data(x) := alu(x).out
     result.io.enq.bits.mask(x) := io.in.bits.mask(x)
-    branch_result.io.enq.bits.mask(x) := alu(x).cmp_out
+    branch_result.io.enq.bits.mask(x) := alu(x).cmp_out & io.in.bits.mask(x)
   }
 
   branch_result.io.enq.bits.branch := io.in.bits.branch
@@ -68,7 +68,7 @@ class VectorALU(implicit p: Parameters) extends Module {
   branch_result.io.enq.valid := io.in.valid
 
   io.out <> result.io.deq
-  io.branch_ctl <> branch_result.io.deq
+  io.branch_data <> branch_result.io.deq
 }
 
 object VectorALURTL extends App {
