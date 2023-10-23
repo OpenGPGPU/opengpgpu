@@ -46,7 +46,7 @@ class CUTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step()
       dut.io.in.valid.poke(1.B)
       dut.io.in.bits.pc.poke(0.U)
-      dut.io.in.bits.mask.map(_ -> 1.B)
+      dut.io.in.bits.mask.map(i => i.poke(1.B))
       dut.clock.step()
       dut.io.in.valid.poke(0.B)
       while(dut.io.out.valid.peek().litToBoolean == false) {
