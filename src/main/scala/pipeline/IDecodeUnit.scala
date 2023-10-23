@@ -144,7 +144,7 @@ class IDecodeUnit(implicit p: Parameters) extends Module() {
   val is_jalr = ctrl.jalr
   val is_join = !ctrl.wxd && ctrl.jal
   val is_branch = ctrl.branch
-
+  val is_end = inst_reg.data === 0x10500073.U
   val imm = ImmGen(ctrl.sel_imm, inst_reg.data)
 
   // output
@@ -169,5 +169,7 @@ class IDecodeUnit(implicit p: Parameters) extends Module() {
 
   io.wcontrol.bits.wid := inst_reg.wid
   io.wcontrol.bits.join := is_join
-  io.wcontrol.bits.active := !(is_branch || is_jal || is_jalr)
+  io.wcontrol.bits.active := !(is_branch || is_jal || is_jalr || is_end)
+  // wfi inst as end inst
+  io.wcontrol.bits.end := is_end
 }

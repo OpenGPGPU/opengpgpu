@@ -65,7 +65,9 @@ class VectorALU(implicit p: Parameters) extends Module {
   result.io.enq.bits.pc := io.in.bits.pc
   result.io.enq.bits.rd := io.in.bits.rd
   result.io.enq.bits.eop := 1.B
-  branch_result.io.enq.valid := io.in.valid
+
+  val is_branch = io.in.bits.branch.jal | io.in.bits.branch.jalr | io.in.bits.branch.branch
+  branch_result.io.enq.valid := io.in.valid && is_branch
 
   io.out <> result.io.deq
   io.branch_data <> branch_result.io.deq

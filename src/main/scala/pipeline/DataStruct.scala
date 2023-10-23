@@ -143,7 +143,6 @@ class DecodeData(implicit p: Parameters) extends Bundle {
   val imm = UInt(xLen.W)
   val sel_alu1 = UInt(A1_X.getWidth.W)
   val sel_alu2 = UInt(A2_X.getWidth.W)
-  // onehot
   val ex_type = new ExType()
   val func = UInt(aluFn.SZ_ALU_FN.W)
   val mem_cmd = UInt(1.W)
@@ -160,6 +159,7 @@ class WarpControlData(implicit p: Parameters) extends Bundle {
   val wid = UInt(log2Ceil(numWarps).W)
   val active = Bool()
   val join = Bool()
+  val end = Bool()
 }
 
 class InstFetchData(implicit p: Parameters) extends Bundle {
@@ -182,7 +182,7 @@ class WarpCommandData(implicit p: Parameters) extends Bundle {
   val pc = UInt(addrWidth.W)
 }
 
-class EndControlData(implicit p: Parameters) extends Bundle {
+class WarpEndData(implicit p: Parameters) extends Bundle {
   val numThreads = p(ThreadNum)
   val addrWidth = p(AddrWidth)
   val numWarps = p(WarpNum)

@@ -7,6 +7,9 @@ toy_alu: init
 test: init
 	mill -i opengpgpu.test
 
+z_test: init
+	mill -i opengpgpu.test -z $(OPT)
+
 alu: init
 	mill -i opengpgpu.runMain  opengpgpu.pipeline.ALURTL
 
