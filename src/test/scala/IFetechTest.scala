@@ -3,7 +3,7 @@ import chisel3.util._
 import chiseltest._
 import org.scalatest._
 import chiseltest.simulator.WriteVcdAnnotation
-import chisel3.util.experimental.loadMemoryFromFileInline
+import chisel3.util.experimental.loadMemoryFromFile
 import org.chipsalliance.cde.config._
 
 import org.scalatest.flatspec.AnyFlatSpec
@@ -27,6 +27,8 @@ class InstFetchTestTop(implicit p: Parameters) extends LazyModule {
       val inst_fetch    = Flipped(DecoupledIO(new InstFetchData()))
       val inst_out = DecoupledIO(new InstData())
     })
+
+    loadMemoryFromFile(ram.module.mem, "src/test/data/iftech/a.txt")
     ifetch.module.io.inst_fetch <> io.inst_fetch
     ifetch.module.io.inst_out <> io.inst_out
   }
@@ -46,7 +48,7 @@ class InstFetchTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.inst_fetch.bits.pc.poke(0x100.U)
       dut.io.inst_fetch.bits.mask(0).poke(1.U)
       dut.clock.step()
-      dut.io.inst_fetch.bits.pc.poke(0x104.U)
+      dut.io.inst_fetch.bits.pc.poke(0x0.U)
       dut.io.inst_out.ready.poke(0.U)
       dut.clock.step()
       dut.io.inst_fetch.valid.poke(0.U)
@@ -60,7 +62,8 @@ class InstFetchTest extends AnyFlatSpec with ChiselScalatestTester {
       while(dut.io.inst_out.valid.peek().litToBoolean == false) {
         dut.clock.step()
       }
-      dut.io.inst_out.bits.pc.expect(0x104.U)
+      dut.io.inst_out.bits.data.expect(0x03020100.U)
+      dut.io.inst_out.bits.pc.expect(0x0.U)
       
     }
   }
