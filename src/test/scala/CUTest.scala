@@ -14,7 +14,7 @@ import freechips.rocketchip.system._
 import freechips.rocketchip.diplomacy._
 import freechips.rocketchip.amba.axi4._
 
-class CUTestTop(implicit p: Parameters) extends LazyModule {
+class CUTestTop(filename: String)(implicit p: Parameters) extends LazyModule {
   val numThread   = p(ThreadNum)
   val address = AddressSet(0x0, 0xffff)
   val ram = LazyModule(new AXI4RAM(address, false))
@@ -30,7 +30,7 @@ class CUTestTop(implicit p: Parameters) extends LazyModule {
 
     cu.module.io.in <> io.in
     cu.module.io.out <> io.out
-    loadMemoryFromFile(ram.module.mem, "src/test/data/cu/add_test/add.txt")
+    loadMemoryFromFile(ram.module.mem, filename)
 
   }
 
@@ -41,7 +41,8 @@ class CUTest extends AnyFlatSpec with ChiselScalatestTester {
 
   it should "perform cu operations correctly" in {
     implicit val p = new CoreConfig 
-    val cu = LazyModule(new CUTestTop)
+    val cu = LazyModule(new CUTestTop("src/test/data/cu/add_test/add.txt"))
+
     test (cu.module).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       dut.clock.step()
       dut.io.in.valid.poke(1.B)
