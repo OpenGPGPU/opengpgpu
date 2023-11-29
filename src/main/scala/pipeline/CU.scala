@@ -40,6 +40,7 @@ class CU(implicit p: Parameters) extends LazyModule {
     warp_sched.io.inst_fetch <> ifetch.module.io.inst_fetch
     warp_sched.io.warp_ctl <> idecode.io.wcontrol
     warp_sched.io.branch_ctl <> branch.io.branch_ctl
+    warp_sched.io.commit_data <> issue.io.writeback_cmd
 
     // ifetch -> idecode
     ifetch.module.io.inst_out <> idecode.io.inst

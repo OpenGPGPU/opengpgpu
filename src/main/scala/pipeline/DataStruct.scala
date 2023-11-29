@@ -176,9 +176,16 @@ class WarpCommandData(implicit p: Parameters) extends Bundle {
   val numThreads = p(ThreadNum)
   val addrWidth = p(AddrWidth)
   val numWarps = p(WarpNum)
+  val dimWidth = p(DimWidth)
 
   val mask = Vec(numThreads, Bool())
+  // max threads num in a workgroup
+  val thread_id_x = UInt(dimWidth.W)
+  val thread_id_y = UInt(dimWidth.W)
+  val thread_id_z = UInt(dimWidth.W)
+  val thread_dims = UInt(2.W)
   val wid = UInt(log2Ceil(numWarps).W)
+  val reg_index = UInt(p(RegIDWidth).W)
   val pc = UInt(addrWidth.W)
 }
 

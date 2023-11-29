@@ -50,6 +50,7 @@ case object RegIDWidth extends Field[Int]
 case object WarpIDWidth extends Field[Int]
 case object AddrWidth extends Field[Int]
 case object StackDepth extends Field[Int]
+case object DimWidth extends Field[Int]
 case object CacheBlockBytes extends Field[Int](64)
 case object ExtMem extends Field[Option[MemoryPortParams]](None)
 case object MemoryBusKey extends Field[MemoryBusParams]
@@ -70,6 +71,7 @@ class CoreConfig
       case MemoryBusKey    => MemoryBusParams(beatBytes = site(XLen) / 8, blockBytes = site(CacheBlockBytes))
       case SystemBusKey    => SystemBusParams(beatBytes = site(XLen) / 8, blockBytes = site(CacheBlockBytes))
       case ALUFunc         => new ABLUFN
+      case DimWidth        => 10
       case ExtMem =>
         Some(
           MemoryPortParams(

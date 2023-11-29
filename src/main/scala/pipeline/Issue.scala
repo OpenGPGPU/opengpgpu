@@ -33,6 +33,7 @@ class Issue(implicit p: Parameters) extends Module {
 
   val io = IO(new Bundle {
     val writeback = Flipped(DecoupledIO(new CommitData()))
+    val writeback_cmd = Flipped(DecoupledIO(new CommitData()))
     val decode = Flipped(DecoupledIO(new DecodeData()))
 
     val alu = DecoupledIO(new ALUData())
@@ -59,6 +60,7 @@ class Issue(implicit p: Parameters) extends Module {
   gpr.io.read_req.wid := io.decode.bits.wid
   gpr.io.read_req.rs1 := io.decode.bits.rs1
   gpr.io.read_req.rs2 := io.decode.bits.rs2
+  gpr.io.writeback_cmd <> io.writeback_cmd
 
   score_board.io.writeback <> io.writeback
   score_board.io.ibuffer.bits := io.decode.bits
