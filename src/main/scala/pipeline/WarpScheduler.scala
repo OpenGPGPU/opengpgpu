@@ -52,7 +52,7 @@ class RegWriter(implicit p: Parameters) extends Module {
       warp_cmd := io.warp_cmd.bits
     }
   }.elsewhen(state === RUN) {
-    when(!(warp_cmd.thread_dims === 0.U)) {
+    when(!(warp_cmd.thread_dims === 0.U) && !cmd_finish) {
       io.commit_data.valid := 1.B
       io.commit_data.bits.wid := warp_id
       io.commit_data.bits.mask := VecInit(Seq.fill(numThreads)(1.B))

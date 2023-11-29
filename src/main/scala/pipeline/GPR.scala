@@ -77,12 +77,11 @@ class GPR(implicit p: Parameters) extends Module() {
 
   }
 
-
   ready_reg := 0.B
   cmd_ready_reg := 0.B
-  when (io.writeback_cmd.valid) {
+  when(io.writeback_cmd.valid) {
     cmd_ready_reg := 1.B
-  }.elsewhen (io.writeback.valid) {
+  }.elsewhen(io.writeback.valid) {
     ready_reg := 1.B
   }
 
