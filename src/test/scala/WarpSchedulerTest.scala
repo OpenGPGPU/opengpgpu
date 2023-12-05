@@ -22,6 +22,12 @@ class WarpSchedulerTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.inst_fetch.ready.poke(true.B)
       dut.clock.step()
       dut.io.warp_cmd.bits.pc.poke(0x300.U)
+      dut.clock.step()
+      dut.io.warp_cmd.valid.poke(false.B)
+
+      while (dut.io.inst_fetch.valid.peek().litToBoolean == false) {
+        dut.clock.step()
+      }
       dut.io.inst_fetch.bits.pc.expect(0x100.U)
       dut.io.inst_fetch.bits.mask(0).expect(1.B)
       dut.clock.step()
